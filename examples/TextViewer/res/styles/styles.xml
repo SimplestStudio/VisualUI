@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Styles>
+  <Widget id="MainWindow">
+    <Color background="WINDOW_BKG"/>
+    <Color border="WINDOW_BRD"/>
+  </Widget>
+  <Widget id="CentralWidget">
+    <Color background="CENTRALWIDGET_BKG"/>
+  </Widget>
+  <Widget id="LeftWidget">
+    <Color background="LEFT_BKG"/>
+    <Color border="LEFT_BKG"/>
+    <Color base="CENTRALWIDGET_BKG"/>
+    <Color text="TEXT_NORMAL"/>
+  </Widget>
+  <Widget id="PanelWidget">
+    <Color background="CONTENT_BKG"/>
+    <Color border="CONTENT_BKG"/>
+    <Color base="CENTRALWIDGET_BKG"/>
+    <Color text="TEXT_NORMAL"/>
+  </Widget>
+  <Widget id="ViewWidget">
+    <Metrics TextMarginLeft="12" TextMarginTop="12" TextMarginRight="12" TextMarginBottom="12"/>
+    <Color background="VIEW_BKG"/>
+    <Color border="CONTENT_BKG"/>
+    <Color base="CENTRALWIDGET_BKG"/>
+    <Color text="TEXT_PRETTY"/>
+  </Widget>
+  <Widget id="HeaderBar">
+    <SizePolicy HSizeBehavior="Expanding" VSizeBehavior="Fixed"/>
+    <Metrics IconMarginLeft="12" IconMarginRight="12" IconAlignment="AlignHLeft|AlignVCenter" TextAlignment="AlignHCenter|AlignVCenter"/>
+    <BaseSize width="50" height="28"/>
+    <Color background="WINDOW_BKG"/>
+    <Color text="TEXT_NORMAL"/>
+  </Widget>
+  <Widget id="HeaderCloseButton">
+    <SizePolicy HSizeBehavior="Fixed" VSizeBehavior="Fixed"/>
+    <Metrics PrimitiveWidth="1"/>
+    <BaseSize width="40" height="28"/>
+    <Color background="WINDOW_BKG" hover="CLOSEBTN_HOVER_BKG" pressed="CLOSEBTN_PRESSED_BKG" disabled="BTN_DISABLED_BKG"/>
+    <Color primitive="TEXT_NORMAL" hover="CLOSEBTN_HOVER_PRIM" pressed="CLOSEBTN_HOVER_PRIM" disabled="TEXT_DISABLED"/>
+  </Widget>
+  <Widget id="HeaderButton">
+    <SizePolicy HSizeBehavior="Fixed" VSizeBehavior="Fixed"/>
+    <Metrics PrimitiveWidth="1"/>
+    <BaseSize width="40" height="28"/>
+    <Color background="WINDOW_BKG" hover="BTN_HOVER_BKG" pressed="BTN_PRESSED_BKG" disabled="BTN_DISABLED_BKG"/>
+    <Color primitive="TEXT_NORMAL" hover="TEXT_NORMAL" pressed="TEXT_NORMAL" disabled="TEXT_DISABLED"/>
+  </Widget>
+  <Widget id="ToolButton">
+    <SizePolicy HSizeBehavior="Fixed" VSizeBehavior="Fixed"/>
+    <Metrics BorderWidth="0" BorderRadius="0"/>
+    <BaseSize width="40" height="32"/>
+    <Color background="LEFT_BKG" hover="BTN_HOVER_BKG" pressed="BTN_PRESSED_BKG"/>
+    <Color base="LEFT_BKG" hover="LEFT_BKG" pressed="LEFT_BKG"/>
+  </Widget>
+  <Widget id="PushButton">
+    <SizePolicy HSizeBehavior="Fixed" VSizeBehavior="Fixed"/>
+    <Metrics BorderWidth="0" BorderRadius="6"/>
+    <BaseSize width="100" height="28"/>
+    <Color background="PUSHBTN_BKG" hover="PUSHBTN_HOVER_BKG" pressed="PUSHBTN_PRESSED_BKG"/>
+    <Color text="#ffffff" hover="#ffffff" pressed="#ffffff"/>
+    <Color base="CONTENT_BKG" hover="CONTENT_BKG" pressed="CONTENT_BKG"/>
+  </Widget>
+  <Widget id="LineEdit">
+    <SizePolicy HSizeBehavior="Fixed" VSizeBehavior="Fixed"/>
+    <Metrics BorderWidth="1" BorderRadius="6" IconMarginLeft="6" IconMarginRight="6" IconAlignment="AlignHLeft|AlignVCenter" TextMarginLeft="24" TextMarginRight="6" TextAlignment="AlignHLeft|AlignVCenter"/>
+    <BaseSize width="160" height="24"/>
+    <Color background="LINEEDIT_BKG" hover="LINEEDIT_HOVER_BKG" pressed="LINEEDIT_HOVER_BKG"/>
+    <Color border="LINEEDIT_BRD" hover="LINEEDIT_HOVER_BRD" pressed="LINEEDIT_HOVER_BRD"/>
+    <Color base="CONTENT_BKG" hover="CONTENT_BKG" pressed="CONTENT_BKG"/>
+    <Color text="TEXT_PRETTY" hover="TEXT_PRETTY" pressed="TEXT_PRETTY"/>
+  </Widget>
+  <Widget id="ToggleButton">
+    <SizePolicy HSizeBehavior="Expanding" VSizeBehavior="Fixed"/>
+    <Metrics BorderRadius="8" IconWidth="32" IconHeight="16" PrimitiveWidth="1" PrimitiveRadius="1" AlternatePrimitiveWidth="2" TextMarginLeft="6"/>
+    <BaseSize width="140" height="24"/>
+    <Color background="CONTENT_BKG" hover="CONTENT_BKG" pressed="CONTENT_BKG"/>
+    <Color base="PROGRESSBAR_BKG" hover="PROGRESSBAR_BKG" pressed="PROGRESSBAR_BKG"/>
+    <Color alternateBase="PUSHBTN_BKG" hover="PUSHBTN_BKG" pressed="PUSHBTN_BKG"/>
+    <Color text="TEXT_NORMAL" hover="TEXT_NORMAL" pressed="TEXT_NORMAL"/>
+    <Color alternatePrimitive="#ffffff" hover="#ffffff" pressed="#ffffff"/>
+  </Widget>
+  <Widget id="Selector">
+    <SizePolicy HSizeBehavior="Expanding" VSizeBehavior="Fixed"/>
+    <Metrics BorderRadius="8" IconWidth="16" IconHeight="16" PrimitiveWidth="1" PrimitiveRadius="1" AlternatePrimitiveWidth="2" TextMarginLeft="22"/>
+    <BaseSize width="140" height="24"/>
+    <Color background="CONTENT_BKG" hover="CONTENT_BKG" pressed="CONTENT_BKG"/>
+    <Color base="CONTENT_BKG" hover="CONTENT_BKG" pressed="CONTENT_BKG"/>
+    <Color text="TEXT_NORMAL" hover="TEXT_NORMAL" pressed="TEXT_NORMAL"/>
+    <Color primitive="#5a6270" hover="#5a6270" pressed="#5a6270"/>
+    <Color alternatePrimitive="TEXT_NORMAL" hover="TEXT_NORMAL" pressed="TEXT_NORMAL"/>
+  </Widget>
+  <Widget id="ProgressBar">
+    <SizePolicy HSizeBehavior="Fixed" VSizeBehavior="Fixed"/>
+    <Metrics BorderRadius="3" IconMarginLeft="0" IconMarginRight="0"/>
+    <BaseSize width="400" height="8"/>
+    <Color background="CONTENT_BKG"/>
+    <Color base="PROGRESSBAR_BKG"/>
+    <Color alternateBase="PROGRESSBAR_CHUNK"/>
+  </Widget>
+  <Widget id="ToolTip">
+    <Metrics BorderWidth="1" BorderRadius="4"/>
+    <Color background="WINDOW_BKG"/>
+    <Color border="WINDOW_BRD"/>
+    <Color text="TEXT_NORMAL"/>
+  </Widget> 
+  <Widget id="MenuButton">
+    <SizePolicy HSizeBehavior="Expanding" VSizeBehavior="Fixed"/>
+    <Metrics TextMarginLeft="25" TextAlignment="AlignHLeft|AlignVCenter"/>
+    <BaseSize width="100" height="26"/>
+    <Color background="WINDOW_BKG" hover="BTN_HOVER_BKG" pressed="BTN_PRESSED_BKG" disabled="BTN_DISABLED_BKG"/>
+    <Color border="WINDOW_BRD"/>
+    <Color text="TEXT_NORMAL" hover="TEXT_NORMAL" pressed="TEXT_NORMAL" disabled="TEXT_DISABLED"/>
+  </Widget>
+  <Widget id="MenuSeparator">
+    <SizePolicy HSizeBehavior="Expanding" VSizeBehavior="Fixed"/>
+    <BaseSize width="10" height="1"/>
+    <Color background="SEPARATOR_BKG"/>
+  </Widget>
+  <Widget id="PopupMsg">
+    <Metrics BorderWidth="1" BorderRadius="8" ShadowRadius="10" ShadowWidth="16"/>
+    <Color background="WINDOW_BKG"/>
+    <Color border="POPUPMSG_BRD"/>
+    <Color text="TEXT_NORMAL"/>
+  </Widget>
+  <Widget id="PopupMsgButton">
+    <SizePolicy HSizeBehavior="Fixed" VSizeBehavior="Fixed"/>
+    <Metrics BorderWidth="1" BorderRadius="5"/>
+    <BaseSize width="90" height="32"/>
+    <Color background="POPUPMSG_BTN_BKG" hover="POPUPMSG_BTN_HOVER_BKG" pressed="POPUPMSG_BTN_PRESSED_BKG"/>
+    <Color border="POPUPMSG_BTN_BRD" hover="POPUPMSG_BTN_BRD" pressed="POPUPMSG_BTN_BRD"/>
+    <Color text="TEXT_NORMAL" hover="TEXT_NORMAL" pressed="TEXT_NORMAL"/>
+  </Widget>
+  <Widget id="PopupMsgTopWidget">
+    <Color background="POPUPMSG_TOP_WIDGET_BKG"/>
+  </Widget>
+  <Widget id="PopupMsgSeparator">
+    <Color background="POPUPMSG_SEPARATOR"/>
+  </Widget>
+  <Widget id="PopupMsgBottomWidget">
+    <Color background="POPUPMSG_BOTTOM_WIDGET_BKG"/>
+  </Widget>
+  <Widget id="PopupMsgLabel">
+    <Color background="POPUPMSG_TOP_WIDGET_BKG"/>
+    <Color text="POPUPMSG_LABEL_TXT"/>
+  </Widget>
+  <Widget id="DialogButton">
+    <SizePolicy HSizeBehavior="Fixed" VSizeBehavior="Fixed"/>
+    <Metrics BorderWidth="1" BorderRadius="5"/>
+    <BaseSize width="90" height="32"/>
+    <Color background="POPUPMSG_BTN_BKG" hover="POPUPMSG_BTN_HOVER_BKG" pressed="POPUPMSG_BTN_PRESSED_BKG"/>
+    <Color base="CONTENT_BKG" hover="CONTENT_BKG" pressed="CONTENT_BKG"/>
+    <Color border="POPUPMSG_BTN_BRD" hover="POPUPMSG_BTN_BRD" pressed="POPUPMSG_BTN_BRD"/>
+    <Color text="TEXT_NORMAL" hover="TEXT_NORMAL" pressed="TEXT_NORMAL"/>
+  </Widget>
+</Styles>

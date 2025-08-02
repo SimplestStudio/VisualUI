@@ -1,0 +1,9 @@
+/examples/TextViewer/res/gresource.c
+/examples/TextViewer/build*
+/examples/ImageViewer/res/gresource.c
+/examples/ImageViewer/build*
+/lib/build*
+Makefile*
+*.qmake*
+*.qtc_clang*
+*.user*

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/">
+    <file>icons/app-icon.png</file>
+    <file>icons/open-file.svg</file>
+    <file>icons/zoom-in.svg</file>
+    <file>icons/zoom-out.svg</file>
+    <file>icons/zoom-reset.svg</file>
+    <file>styles/themes.xml</file>
+    <file>styles/styles.xml</file>
+  </gresource>
+</gresources>
+
+<!--
+Compiling:
+$ glib-compile-resources --target=gtk_resources.c --generate-source gtk_resources.xml
+$ glib-compile-resources --target=gtk_resources.h --generate-header gtk_resources.xml
+-->

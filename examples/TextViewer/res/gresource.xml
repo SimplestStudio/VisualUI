@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/">
+    <file>icons/app-icon.png</file>
+    <file>icons/logo.svg</file>
+    <file>icons/open-file.svg</file>
+    <file>icons/save-file.svg</file>
+    <file>icons/menu.svg</file>
+    <file>icons/about.svg</file>
+    <file>icons/search.svg</file>
+    <file>icons/not-found.svg</file>
+    <file>icons/logo_dark.svg</file>
+    <file>icons/open-file_dark.svg</file>
+    <file>icons/save-file_dark.svg</file>
+    <file>icons/menu_dark.svg</file>
+    <file>icons/about_dark.svg</file>
+    <file>icons/search_dark.svg</file>
+    <file>icons/tools.png</file>
+    <file>styles/themes.xml</file>
+    <file>styles/styles.xml</file>
+  </gresource>
+</gresources>
+
+<!--
+Compiling:
+$ glib-compile-resources --target=gtk_resources.c --generate-source gtk_resources.xml
+$ glib-compile-resources --target=gtk_resources.h --generate-header gtk_resources.xml
+-->

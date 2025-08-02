@@ -1,0 +1,52 @@
+#pragma code_page(65001)
+#include <windows.h>
+#include "../src/resource.h"
+
+IDI_MAINICON      ICON  DISCARDABLE "./icons/app-icon.ico"
+IDI_TOOLS         PNG     "./icons/tools.png"
+IDI_LOGO          RCDATA  "./icons/logo.emf"
+IDI_MENUEMF       RCDATA  "./icons/menu.emf"
+IDI_SAVEFILE      RCDATA  "./icons/save-file.emf"
+IDI_OPENFILE      RCDATA  "./icons/open-file.emf"
+IDI_ABOUTEMF      RCDATA  "./icons/about.emf"
+IDI_SEARCHEMF     RCDATA  "./icons/search.emf"
+IDI_NOTFOUND      RCDATA  "./icons/not-found.emf"
+IDI_LOGODARK      RCDATA  "./icons/logo_dark.emf"
+IDI_MENUDARKEMF   RCDATA  "./icons/menu_dark.emf"
+IDI_SAVEFILEDARK  RCDATA  "./icons/save-file_dark.emf"
+IDI_OPENFILEDARK  RCDATA  "./icons/open-file_dark.emf"
+IDI_ABOUTDARKEMF  RCDATA  "./icons/about_dark.emf"
+IDI_SEARCHDARKEMF RCDATA  "./icons/search_dark.emf"
+IDT_THEMES        TEXT    "./styles/themes.xml"
+IDT_STYLES        TEXT    "./styles/styles.xml"
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "./manifest/TextViewer.exe.manifest"
+
+#include "../src/version.h"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     VER_FILEVERSION
+PRODUCTVERSION  VER_PRODUCTVERSION
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK VER_LANG_AND_CHARSET_STR
+        BEGIN
+            VALUE "CompanyName",        VER_COMPANYNAME_STR
+            VALUE "FileDescription",    VER_FILEDESCRIPTION_STR
+            VALUE "FileVersion",        VER_FILEVERSION_STR
+            VALUE "InternalName",       VER_INTERNALNAME_STR
+            VALUE "LegalCopyright",     VER_LEGALCOPYRIGHT_STR
+            VALUE "LegalTrademarks1",   VER_LEGALTRADEMARKS1_STR
+            VALUE "LegalTrademarks2",   VER_LEGALTRADEMARKS2_STR
+            VALUE "OriginalFilename",   VER_ORIGINALFILENAME_STR
+            VALUE "ProductName",        VER_PRODUCTNAME_STR
+            VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", VER_LANG_ID, VER_CHARSET_ID
+    END
+END

@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.5)
+project(VisualUI)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_library(VisualUI STATIC)
+
+target_compile_definitions(VisualUI PRIVATE VISUALUI_LIBRARY)
+include(${CMAKE_CURRENT_SOURCE_DIR}/VisualUI.cmake)
+
+set(OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/build)
+set_target_properties(VisualUI PROPERTIES
+    OUTPUT_NAME "visualui"
+    ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIR}
+    RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}
+)
