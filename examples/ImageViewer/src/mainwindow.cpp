@@ -416,6 +416,9 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
         cenPanel->setCorners(corners & (UIDrawingEngine::CornerLBottom | UIDrawingEngine::CornerRBottom));
         cenPanel->SetMetrics(Metrics::BorderRadius, radius);
 
+        rightPanel->setCorners(corners & UIDrawingEngine::CornerRBottom);
+        rightPanel->SetMetrics(Metrics::BorderRadius, radius);
+
         btn1->setCorners(corners & UIDrawingEngine::CornerRTop);
         btn1->SetMetrics(Metrics::BorderRadius, radius);
     };
