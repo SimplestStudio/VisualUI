@@ -380,6 +380,9 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
         leftPanel->setCorners(corners & (UIDrawingEngine::CornerLBottom));
         leftPanel->SetMetrics(Metrics::BorderRadius, radius);
 
+        btn7->setCorners(corners & UIDrawingEngine::CornerLBottom);
+        btn7->SetMetrics(Metrics::BorderRadius, radius);
+
         viewPanel->setCorners(corners & (UIDrawingEngine::CornerRBottom));
         viewPanel->SetMetrics(Metrics::BorderRadius, radius);
     };
