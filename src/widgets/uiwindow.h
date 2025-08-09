@@ -33,9 +33,9 @@ public:
     virtual void move(int, int) override;
 #else
     BYTE cornersPlacementAndRadius(int &radius);
-#endif
     virtual Size size() const override;
     virtual void size(int*, int*) const override;
+#endif
     void setMinimumSize(int w, int h);
     void setMaximumSize(int w, int h);
     void setCentralWidget(UIWidget*);

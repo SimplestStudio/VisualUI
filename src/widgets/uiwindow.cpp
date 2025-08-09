@@ -481,15 +481,9 @@ BYTE UIWindow::cornersPlacementAndRadius(int &radius)
     }
     return UIDrawingEngine::CornerAll;
 }
-#endif
 
 Size UIWindow::size() const
 {
-#ifdef _WIN32
-    RECT rc;
-    GetWindowRect(m_hWindow, &rc);
-    return Size(rc.right - rc.left, rc.bottom - rc.top);
-#else
     int w = 0, h = 0;
     gtk_window_get_size(GTK_WINDOW(m_hWindow), &w, &h);
     if (!gtk_window_is_maximized(GTK_WINDOW(m_hWindow))) {
@@ -497,24 +491,17 @@ Size UIWindow::size() const
         h -= m_frame.top + m_frame.bottom;
     }
     return Size(w, h);
-#endif
 }
 
 void UIWindow::size(int *width, int *height) const
 {
-#ifdef _WIN32
-    RECT rc;
-    GetWindowRect(m_hWindow, &rc);
-    *width = rc.right - rc.left;
-    *height =  rc.bottom - rc.top;
-#else
     gtk_window_get_size(GTK_WINDOW(m_hWindow), width, height);
     if (!gtk_window_is_maximized(GTK_WINDOW(m_hWindow))) {
         *width -= m_frame.left + m_frame.right;
         *height -= m_frame.top + m_frame.bottom;
     }
-#endif
 }
+#endif
 
 void UIWindow::setMinimumSize(int w, int h)
 {

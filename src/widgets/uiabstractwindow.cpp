@@ -58,6 +58,31 @@ void UIAbstractWindow::resize(int w, int h)
 }
 #endif
 
+Size UIAbstractWindow::size() const
+{
+#ifdef _WIN32
+    RECT rc;
+    GetWindowRect(m_hWindow, &rc);
+    return Size(rc.right - rc.left, rc.bottom - rc.top);
+#else
+    int w = 0, h = 0;
+    gtk_window_get_size(GTK_WINDOW(m_hWindow), &w, &h);
+    return Size(w, h);
+#endif
+}
+
+void UIAbstractWindow::size(int *width, int *height) const
+{
+#ifdef _WIN32
+    RECT rc;
+    GetWindowRect(m_hWindow, &rc);
+    *width = rc.right - rc.left;
+    *height =  rc.bottom - rc.top;
+#else
+    gtk_window_get_size(GTK_WINDOW(m_hWindow), width, height);
+#endif
+}
+
 Point UIAbstractWindow::pos() const
 {
 #ifdef _WIN32
