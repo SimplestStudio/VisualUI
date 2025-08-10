@@ -81,24 +81,37 @@ static void RoundedPath(cairo_t *cr, unsigned char corner, double x, double y, d
 
 static inline void GetIconMargins(Margins &mrg, const Metrics *metrics, double dpi, bool rtl) noexcept
 {
+#ifdef _WIN32
+    mrg.left = metrics->value(Metrics::IconMarginLeft) * dpi;
+    mrg.right = metrics->value(Metrics::IconMarginRight) * dpi;
+#else
     mrg.left = (rtl ? metrics->value(Metrics::IconMarginRight) : metrics->value(Metrics::IconMarginLeft)) * dpi;
     mrg.right = (rtl ? metrics->value(Metrics::IconMarginLeft) : metrics->value(Metrics::IconMarginRight)) * dpi;
+#endif
     mrg.top = metrics->value(Metrics::IconMarginTop) * dpi;
     mrg.bottom = metrics->value(Metrics::IconMarginBottom) * dpi;
 }
 
-static inline void GetIconPlacement(Rect &rc, const Rect &src_rc, const Margins &mrg, const Metrics *metrics, double dpi) noexcept
+static inline void GetIconPlacement(Rect &rc, const Rect &src_rc, const Margins &mrg, const Metrics *metrics, double dpi, bool rtl) noexcept
 {
     rc.x = 0;
     rc.y = 0;
     rc.width = metrics->value(Metrics::IconWidth) * dpi;
     rc.height = metrics->value(Metrics::IconHeight) * dpi;
     int algn = metrics->value(Metrics::IconAlignment);
+#ifdef _WIN32
     if (algn & Metrics::AlignHLeft)
+#else
+    if (algn & (rtl ? Metrics::AlignHRight : Metrics::AlignHLeft))
+#endif
         rc.x = mrg.left + src_rc.x;
     if (algn & Metrics::AlignHCenter)
         rc.x = mrg.left + src_rc.x + (src_rc.width - rc.width) / 2;
+#ifdef _WIN32
     if (algn & Metrics::AlignHRight)
+#else
+    if (algn & (rtl ? Metrics::AlignHLeft : Metrics::AlignHRight))
+#endif
         rc.x = src_rc.x + src_rc.width - mrg.right - rc.width;
     if (algn & Metrics::AlignVTop)
         rc.y = mrg.top + src_rc.y;
@@ -453,7 +466,7 @@ void UIDrawingEngine::DrawCheckBox(const tstring &text, PlatformFont hFont, RECT
     }
     m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeDefault);
 #else
-    double x = m_rc->x + 1.5;
+    double x = m_rtl ? m_rc->width - icon_height - 1.5 : m_rc->x + 1.5;
     double y = m_rc->y + (m_rc->height - icon_height) / 2 + 0.5;
 
     COLORREF rgb = palette->color(Palette::Primitive);
@@ -474,7 +487,8 @@ void UIDrawingEngine::DrawCheckBox(const tstring &text, PlatformFont hFont, RECT
         cairo_stroke(m_cr);
     }
     if (!text.empty()) {
-        Rect rc(m_rc->x + icon_width, m_rc->y, m_rc->width, m_rc->height);
+        int offset = (m_rtl) ? icon_width : 0;
+        Rect rc(m_rc->x + icon_width - offset, m_rc->y, m_rc->width - offset, m_rc->height);
         DrawString(rc, text, hFont);
     }
 #endif
@@ -514,7 +528,7 @@ void UIDrawingEngine::DrawRadioButton(const tstring &text, PlatformFont hFont, R
     }
     m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeDefault);
 #else
-    double x = m_rc->x + 1.5;
+    double x = m_rtl ? m_rc->width - icon_height - 1.5 : m_rc->x + 1.5;
     double y = m_rc->y + (m_rc->height - icon_height) / 2 + 0.5;
 
     COLORREF rgb = palette->color(Palette::Primitive);
@@ -531,7 +545,8 @@ void UIDrawingEngine::DrawRadioButton(const tstring &text, PlatformFont hFont, R
         cairo_fill(m_cr);
     }
     if (!text.empty()) {
-        Rect rc(m_rc->x + icon_width, m_rc->y, m_rc->width, m_rc->height);
+        int offset = (m_rtl) ? icon_width : 0;
+        Rect rc(m_rc->x + icon_width - offset, m_rc->y, m_rc->width - offset, m_rc->height);
         DrawString(rc, text, hFont);
     }
 #endif
@@ -579,7 +594,7 @@ void UIDrawingEngine::DrawToggleButton(const tstring &text, PlatformFont hFont, 
     m_graphics->SetPixelOffsetMode(Gdiplus::PixelOffsetModeDefault);
     m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeDefault);
 #else
-    int x = m_rc->x + 1;
+    int x = m_rtl ? m_rc->width - icon_width - 1 : m_rc->x + 1;
     int y = m_rc->y + (m_rc->height - icon_height) / 2;
 
     COLORREF rgb = palette->color(checked ? Palette::AlternateBase : Palette::Base);
@@ -597,7 +612,8 @@ void UIDrawingEngine::DrawToggleButton(const tstring &text, PlatformFont hFont, 
     cairo_arc(m_cr, _x + float(x) + float(1.4f * m_dpi) + rad, float(y) + float(1.4f * m_dpi) + rad, rad, 0, 2 * G_PI);
     cairo_fill(m_cr);
     if (!text.empty()) {
-        Rect rc(m_rc->x + icon_width, m_rc->y, m_rc->width, m_rc->height);
+        int offset = (m_rtl) ? icon_width : 0;
+        Rect rc(m_rc->x + icon_width - offset, m_rc->y, m_rc->width - offset, m_rc->height);
         DrawString(rc, text, hFont);
     }
 #endif
@@ -667,7 +683,7 @@ void UIDrawingEngine::DrawProgressBar(int progress, int pulse_pos) const noexcep
         int _x = x, _width;
         if (pulse_pos != -1) {
             _width = width/5;
-            _x = x + (int)round(double((width - _width) * pulse_pos)/100);
+            _x += m_rtl ? (int)round(double((width - _width) * (100 - pulse_pos)) / 100) : (int)round(double((width - _width) * pulse_pos) / 100);
         } else {
             if (progress < 0)
                 progress = 0;
@@ -675,6 +691,8 @@ void UIDrawingEngine::DrawProgressBar(int progress, int pulse_pos) const noexcep
             if (progress > 100)
                 progress = 100;
             _width = (int)round(double(width * progress)/100);
+            if (m_rtl)
+                _x += width - _width;
         }
         if (_width != 0 && height != 0) {
             RoundedPath(m_cr, CornerAll, _x, y, _width, height, rad);
@@ -727,9 +745,9 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
     Gdiplus::StringFormat strFmt;
     strFmt.SetAlignment(h_algn);
     strFmt.SetLineAlignment(v_algn);
-    strFmt.SetFormatFlags(multiline ? Gdiplus::StringFormatFlagsLineLimit : Gdiplus::StringFormatFlagsNoWrap);
+    INT flags = multiline ? Gdiplus::StringFormatFlagsLineLimit : Gdiplus::StringFormatFlagsNoWrap;
     if (m_rtl) {
-        strFmt.SetFormatFlags(Gdiplus::StringFormatFlagsDirectionRightToLeft);
+        flags |= Gdiplus::StringFormatFlagsDirectionRightToLeft;
         if (!m_root_is_layered) {
             m_origMatrix = new Gdiplus::Matrix;
             m_graphics->GetTransform(m_origMatrix);
@@ -737,6 +755,7 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
             m_graphics->SetTransform(&rtlMatrix);
         }
     }
+    strFmt.SetFormatFlags(flags);
     Gdiplus::SolidBrush brush(ColorFromColorRef(m_ds->palette()->color(Palette::Text)));
     m_graphics->DrawString(text.c_str(), -1, &font, rcF, &strFmt, &brush);
     if (bounds) {
@@ -779,7 +798,7 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
     int text_y = _rc.y;
     PangoAlignment h_algn = PANGO_ALIGN_LEFT;
     int algn = metrics->value(Metrics::TextAlignment);
-    if (algn & Metrics::AlignHLeft) {
+    if (algn & (m_rtl ? Metrics::AlignHRight : Metrics::AlignHLeft)) {
         h_algn = PANGO_ALIGN_LEFT;
     }
     if (algn & Metrics::AlignHCenter) {
@@ -787,7 +806,7 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
         if (!multiline)
             text_x += round((_rc.width - txt_w) / 2.0);
     }
-    if (algn & Metrics::AlignHRight) {
+    if (algn & (m_rtl ? Metrics::AlignHLeft : Metrics::AlignHRight)) {
         h_algn = PANGO_ALIGN_RIGHT;
         if (!multiline)
             text_x += _rc.width - txt_w;
@@ -823,10 +842,10 @@ void UIDrawingEngine::DrawIcon(PlatformIcon hIcon) const
     GetIconMargins(mrg, metrics, m_dpi, m_rtl);
     Rect dst_rc;
 #ifdef _WIN32
-    GetIconPlacement(dst_rc, Rect(m_rc->left, m_rc->top, m_rc->right - m_rc->left, m_rc->bottom - m_rc->top), mrg, metrics, m_dpi);
+    GetIconPlacement(dst_rc, Rect(m_rc->left, m_rc->top, m_rc->right - m_rc->left, m_rc->bottom - m_rc->top), mrg, metrics, m_dpi, m_rtl);
     DrawIconEx(m_memDC, dst_rc.x, dst_rc.y, hIcon, dst_rc.width, dst_rc.height, 0, NULL, DI_NORMAL);
 #else
-    GetIconPlacement(dst_rc, *m_rc, mrg, metrics, m_dpi);
+    GetIconPlacement(dst_rc, *m_rc, mrg, metrics, m_dpi, m_rtl);
     int pb_width = gdk_pixbuf_get_width(hIcon);
     int pb_height = gdk_pixbuf_get_height(hIcon);
     double sx = (double)dst_rc.width / pb_width;
@@ -929,7 +948,7 @@ void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf) const noexcept
     Margins mrg;
     GetIconMargins(mrg, metrics, m_dpi, m_rtl);
     Rect dst_rc;
-    GetIconPlacement(dst_rc, Rect(m_rc->left, m_rc->top, m_rc->right - m_rc->left, m_rc->bottom - m_rc->top), mrg, metrics, m_dpi);
+    GetIconPlacement(dst_rc, Rect(m_rc->left, m_rc->top, m_rc->right - m_rc->left, m_rc->bottom - m_rc->top), mrg, metrics, m_dpi, m_rtl);
     m_graphics->SetInterpolationMode(Gdiplus::InterpolationModeHighQuality);
     m_graphics->SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
     m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
@@ -945,7 +964,7 @@ void UIDrawingEngine::DrawImage(Gdiplus::Bitmap *hBmp) const noexcept
     Margins mrg;
     GetIconMargins(mrg, metrics, m_dpi, m_rtl);
     Rect dst_rc;
-    GetIconPlacement(dst_rc, Rect(m_rc->left, m_rc->top, m_rc->right - m_rc->left, m_rc->bottom - m_rc->top), mrg, metrics, m_dpi);
+    GetIconPlacement(dst_rc, Rect(m_rc->left, m_rc->top, m_rc->right - m_rc->left, m_rc->bottom - m_rc->top), mrg, metrics, m_dpi, m_rtl);
     m_graphics->SetInterpolationMode(Gdiplus::InterpolationModeLowQuality);
     m_graphics->SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
     // m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
