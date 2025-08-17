@@ -1039,7 +1039,7 @@ bool UIWindow::event(uint ev_type, void *param)
             if (m_borderless)
                 m_resAreaWidth =  m_isMaximized ? 0 : m_is_support_round_corners ? WINDOW_THIN_BORDER_WIDTH : WINDOW_BORDER_WIDTH;
 
-            // TODO: Exiting from maximized state by dragging the title bar requires an additional resize update for XFCE.
+            // HACK: Exiting from maximized state by dragging the title bar requires an additional resize update for XFCE.
             if (m_borderless && !m_isMaximized && UIUtils::desktopEnv() == UIUtils::DesktopEnv::XFCE)
                 g_idle_add_full(G_PRIORITY_LOW, onUpdateGeometry, m_hWindow, NULL);
         }

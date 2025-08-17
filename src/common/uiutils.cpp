@@ -280,6 +280,10 @@ bool UIUtils::isRtlLanguage(const char *locale)
 }
 #endif
 
+// CRITICAL: Checks whether `addr` points to a block allocated on the process heap.
+// Used before freeing memory to avoid accessing invalid or foreign memory regions.
+// An incorrect implementation or misuse of this function
+// will result in application crashes or memory corruption.
 bool UIUtils::isAllocOnHeap(void *addr) {
 #ifdef _WIN32
     if (HANDLE procHeap = GetProcessHeap()) {
