@@ -17,7 +17,6 @@ namespace UIUtils
         Undef, WinXP, WinVista, Win7, Win8, Win8_1, Win10, Win11, WinFuture
     };
     WinVer DECL_VISUALUI winVersion() noexcept;
-    std::wstring DECL_VISUALUI utf8ToWStr(const std::string &str);
     std::wstring DECL_VISUALUI currentUserSID();
     DWORD DECL_VISUALUI regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value);
     double DECL_VISUALUI screenDpiAtPoint(const POINT &pt);
@@ -25,7 +24,6 @@ namespace UIUtils
     void DECL_VISUALUI loadImageResource(Gdiplus::Bitmap* &hBmp, int id, LPCWSTR type);
     void DECL_VISUALUI loadEmfResource(Gdiplus::Metafile* &hBmp, int id, LPCWSTR type);
     void DECL_VISUALUI loadStringResource(tstring &str, int id);
-    bool DECL_VISUALUI isRtlLanguage(unsigned long lcid);
 #else
     enum class DesktopEnv : unsigned char {
         UNDEF, UNITY, GNOME, KDE, XFCE, CINNAMON, OTHER
@@ -36,9 +34,24 @@ namespace UIUtils
     DesktopEnv DECL_VISUALUI desktopEnv();
     WindowServer DECL_VISUALUI windowServer();
     void DECL_VISUALUI loadStringResource(tstring &str, GResource *res, const char *resourcePath);
-    bool DECL_VISUALUI isRtlLanguage(const char *locale);
 #endif
     bool isAllocOnHeap(void *addr);
+};
+
+namespace UILocalization
+{
+#ifdef _WIN32
+bool DECL_VISUALUI isRtlLanguage(unsigned long lcid);
+#else
+bool DECL_VISUALUI isRtlLanguage(const char *locale);
+#endif
+};
+
+namespace UIUnicode
+{
+#ifdef _WIN32
+std::wstring DECL_VISUALUI utf8ToWStr(const std::string &str);
+#endif
 };
 
 #endif // UIUTILS_H

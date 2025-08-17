@@ -97,19 +97,6 @@ UIUtils::WinVer UIUtils::winVersion() noexcept
     return winVer;
 }
 
-std::wstring UIUtils::utf8ToWStr(const std::string &str)
-{
-    if (!str.empty()) {
-        int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.length(), nullptr, 0);
-        if (size > 0) {
-            std::wstring result(size, L'\0');
-            MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.length(), &result[0], size);
-            return result;
-        }
-    }
-    return {};
-}
-
 std::wstring UIUtils::currentUserSID()
 {
     static std::wstring user_sid;
@@ -186,27 +173,13 @@ void UIUtils::loadStringResource(tstring &str, int id)
             std::string buf(size + 1, '\0');
             ULONG bytesRead = 0;
             if (SUCCEEDED(pStream->Read(&buf[0], size, &bytesRead)) && bytesRead == size) {
-                str = utf8ToWStr(buf);
+                str = UIUnicode::utf8ToWStr(buf);
             }
         }
         pStream->Release();
     } else {
         str.clear();
     }
-}
-
-bool UIUtils::isRtlLanguage(unsigned long lcid)
-{
-    if (winVersion() >= WinVer::Win7) {
-        DWORD layout = 0;
-        if (GetLocaleInfo(lcid, LOCALE_IREADINGLAYOUT | LOCALE_RETURN_NUMBER, (LPWSTR)&layout, sizeof(layout)/sizeof(WCHAR)) > 0)
-            return layout == 1;
-    } else {
-        LOCALESIGNATURE lsig;
-        if (GetLocaleInfo(lcid, LOCALE_FONTSIGNATURE, (LPWSTR)&lsig, sizeof(lsig)/sizeof(WCHAR)) > 0)
-            return (lsig.lsUsb[3] & BIT123_LAYOUTRTL) != 0;
-    }
-    return false;
 }
 #else
 UIUtils::DesktopEnv UIUtils::desktopEnv()
@@ -266,18 +239,6 @@ void UIUtils::loadStringResource(tstring &str, GResource *res, const char *resou
         }
     }
 }
-
-bool UIUtils::isRtlLanguage(const char *locale)
-{
-    PangoLanguage *lang = pango_language_from_string(locale);
-    const char *sample = pango_language_get_sample_string(lang);
-    if (sample && *sample) {
-        gunichar uch = g_utf8_get_char(sample);
-        PangoDirection dir = pango_unichar_direction(uch);
-        return dir == PANGO_DIRECTION_RTL;
-    }
-    return false;
-}
 #endif
 
 // CRITICAL: Checks whether `addr` points to a block allocated on the process heap.
@@ -325,3 +286,46 @@ bool UIUtils::isAllocOnHeap(void *addr) {
 #endif
     return false;
 }
+
+#ifdef _WIN32
+bool UILocalization::isRtlLanguage(unsigned long lcid)
+{
+    if (UIUtils::winVersion() >= UIUtils::WinVer::Win7) {
+        DWORD layout = 0;
+        if (GetLocaleInfo(lcid, LOCALE_IREADINGLAYOUT | LOCALE_RETURN_NUMBER, (LPWSTR)&layout, sizeof(layout)/sizeof(WCHAR)) > 0)
+            return layout == 1;
+    } else {
+        LOCALESIGNATURE lsig;
+        if (GetLocaleInfo(lcid, LOCALE_FONTSIGNATURE, (LPWSTR)&lsig, sizeof(lsig)/sizeof(WCHAR)) > 0)
+            return (lsig.lsUsb[3] & BIT123_LAYOUTRTL) != 0;
+    }
+    return false;
+}
+#else
+bool UILocalization::isRtlLanguage(const char *locale)
+{
+    PangoLanguage *lang = pango_language_from_string(locale);
+    const char *sample = pango_language_get_sample_string(lang);
+    if (sample && *sample) {
+        gunichar uch = g_utf8_get_char(sample);
+        PangoDirection dir = pango_unichar_direction(uch);
+        return dir == PANGO_DIRECTION_RTL;
+    }
+    return false;
+}
+#endif
+
+#ifdef _WIN32
+std::wstring UIUnicode::utf8ToWStr(const std::string &str)
+{
+    if (!str.empty()) {
+        int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.length(), nullptr, 0);
+        if (size > 0) {
+            std::wstring result(size, L'\0');
+            MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.length(), &result[0], size);
+            return result;
+        }
+    }
+    return {};
+}
+#endif
