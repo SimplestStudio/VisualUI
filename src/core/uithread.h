@@ -9,9 +9,9 @@
 
 namespace UIThread
 {
-    template<typename Fn, typename... Args>
+    template<typename Widget, typename Fn, typename... Args>
     typename std::enable_if<std::is_member_function_pointer<Fn>::value>::type
-    invoke(UIWidget *wgt, Fn&& fn, Args&&... args) {
+    invoke(Widget *wgt, Fn&& fn, Args&&... args) {
         auto func = new std::function<void()>(std::bind(std::forward<Fn>(fn), wgt, std::forward<Args>(args)...));
 #ifdef _WIN32
         PostMessage(wgt->platformWindow(), WM_INVOKEMETHOD, (WPARAM)func, 0);
@@ -20,9 +20,9 @@ namespace UIThread
 #endif
     }   // NOLINT
 
-    template<typename Fn>
+    template<typename Widget, typename Fn>
     typename std::enable_if<!std::is_member_function_pointer<Fn>::value>::type
-    invoke(UIWidget *wgt, Fn&& fn) {
+    invoke(Widget *wgt, Fn&& fn) {
         auto func = new std::function<void()>(std::forward<Fn>(fn));
 #ifdef _WIN32
         PostMessage(wgt->platformWindow(), WM_INVOKEMETHOD, (WPARAM)func, 0);
