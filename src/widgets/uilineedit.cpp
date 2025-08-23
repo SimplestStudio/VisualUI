@@ -2,6 +2,7 @@
 #include "uidrawningengine.h"
 #include "uimetrics.h"
 #include "uiapplication.h"
+#include "uiutils.h"
 #ifdef __linux
 # include "cmath"
 # include "widgets/linux/gtkcaret.h"
@@ -9,23 +10,7 @@
 
 #define DEFAULT_CARET_WIDTH 1
 
-#ifdef __linux__
-static size_t utf8_char_len_at(const tstring &str, size_t byte_pos)
-{
-    const char *pos_ptr = str.c_str() + byte_pos;
-    const char *next_ptr = g_utf8_next_char(pos_ptr);
-    return next_ptr - pos_ptr;
-}
-
-static size_t utf8_char_len_before(const tstring &str, size_t byte_pos)
-{
-    if (byte_pos > str.length())
-        return 0;
-    const char *pos_ptr = str.c_str() + byte_pos;
-    const char *prev_ptr = g_utf8_prev_char(pos_ptr);
-    return pos_ptr - prev_ptr;
-}
-#endif
+using namespace UIUnicode;
 
 UILineEdit::UILineEdit(UIWidget *parent, const tstring &text) :
     UIAbstractButton(parent, text),
@@ -147,8 +132,9 @@ bool UILineEdit::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
         case VK_HOME:
             if (m_pos > 0 && m_text.length() > 0) {
                 m_pos = 0;
+                size_t len = charLenAt(m_text, m_pos);
                 Rect rc;
-                textBounds(m_text.substr(0, 1), rc);
+                textBounds(m_text.substr(0, len), rc);
                 m_caretPosX = rc.x;
             }
             break;
@@ -164,16 +150,18 @@ bool UILineEdit::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 
         case VK_LEFT:
             if (m_pos > 0) {
-                m_pos--;
+                size_t len = charLenBefore(m_text, m_pos);
+                m_pos -= len;
                 Rect rc;
-                textBounds(m_text.substr(0, m_pos == 0 ? 1 : m_pos), rc);
+                textBounds(m_text.substr(0, m_pos == 0 ? len : m_pos), rc);
                 m_caretPosX = rc.x + (m_pos == 0 ? 0 : rc.width);
             }
             break;
 
         case VK_RIGHT:
             if (m_pos < m_text.length()) {
-                m_pos++;
+                size_t len = charLenAt(m_text, m_pos);
+                m_pos += len;
                 Rect rc;
                 textBounds(m_text.substr(0, m_pos), rc);
                 m_caretPosX = rc.x + rc.width;
@@ -182,7 +170,8 @@ bool UILineEdit::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 
         case VK_DELETE:
             if (m_text.length() > 0) {
-                m_text.erase(m_pos, 1);
+                size_t len = charLenAt(m_text, m_pos);
+                m_text.erase(m_pos, len);
                 m_viewportText = m_text.empty() && !m_placeholderText.empty() ? m_placeholderText : m_text;
                 update();
             }
@@ -197,9 +186,10 @@ bool UILineEdit::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
         switch (wParam) {
         case 0x08: // Backspace
             if (m_pos > 0) {
-                m_pos--;
+                size_t len = charLenBefore(m_text, m_pos);
+                m_pos -= len;
                 Rect rc;
-                textBounds(m_text.substr(0, m_pos == 0 ? 1 : m_pos), rc);
+                textBounds(m_text.substr(0, m_pos == 0 ? len : m_pos), rc);
                 m_caretPosX = rc.x + (m_pos == 0 ? 0 : rc.width);
                 SendMessage(m_hWindow, WM_KEYDOWN, VK_DELETE, 1L);
             }
@@ -271,7 +261,7 @@ bool UILineEdit::event(uint ev_type, void *param)
         GdkEventFocus *fev = (GdkEventFocus*)param;
         if (fev->in == 1) {
             Rect rc;
-            tstring text = m_text.empty() ? _T(" ") : m_text.substr(0, m_pos == 0 ? utf8_char_len_at(m_text, m_pos) : m_pos);
+            tstring text = m_text.empty() ? _T(" ") : m_text.substr(0, m_pos == 0 ? charLenAt(m_text, m_pos) : m_pos);
             textBounds(text, rc);
             m_caretPosX = rc.x + (m_text.empty() || m_pos == 0 ? 0 : rc.width);
             m_caretPosY = rc.y;
@@ -297,7 +287,7 @@ bool UILineEdit::event(uint ev_type, void *param)
         case GDK_KEY_Home:
             if (m_pos > 0 && m_text.length() > 0) {
                 m_pos = 0;
-                size_t len = utf8_char_len_at(m_text, m_pos);
+                size_t len = charLenAt(m_text, m_pos);
                 Rect rc;
                 textBounds(m_text.substr(0, len), rc);
                 m_caretPosX = rc.x;
@@ -315,7 +305,7 @@ bool UILineEdit::event(uint ev_type, void *param)
 
         case GDK_KEY_Left:
             if (m_pos > 0) {
-                size_t len = utf8_char_len_before(m_text, m_pos);
+                size_t len = charLenBefore(m_text, m_pos);
                 m_pos -= len;
                 Rect rc;
                 textBounds(m_text.substr(0, m_pos == 0 ? len : m_pos), rc);
@@ -325,7 +315,7 @@ bool UILineEdit::event(uint ev_type, void *param)
 
         case GDK_KEY_Right:
             if (m_pos < m_text.length()) {
-                size_t len = utf8_char_len_at(m_text, m_pos);
+                size_t len = charLenAt(m_text, m_pos);
                 m_pos += len;
                 Rect rc;
                 textBounds(m_text.substr(0, m_pos), rc);
@@ -335,7 +325,7 @@ bool UILineEdit::event(uint ev_type, void *param)
 
         case GDK_KEY_Delete:
             if (m_pos < m_text.length()) {
-                size_t len = utf8_char_len_at(m_text, m_pos);
+                size_t len = charLenAt(m_text, m_pos);
                 m_text.erase(m_pos, len);
                 m_viewportText = m_text;
                 update();
@@ -344,13 +334,13 @@ bool UILineEdit::event(uint ev_type, void *param)
 
         case GDK_KEY_BackSpace:
             if (m_pos > 0) {
-                size_t len = utf8_char_len_before(m_text, m_pos);
+                size_t len = charLenBefore(m_text, m_pos);
                 m_pos -=len;
                 Rect rc;
                 textBounds(m_text.substr(0, m_pos == 0 ? len : m_pos), rc);
                 m_caretPosX = rc.x + (m_pos == 0 ? 0 : rc.width);
                 if (m_pos < m_text.length()) {
-                    size_t len = utf8_char_len_at(m_text, m_pos);
+                    size_t len = charLenAt(m_text, m_pos);
                     m_text.erase(m_pos, len);
                     m_viewportText = m_text;
                     update();
