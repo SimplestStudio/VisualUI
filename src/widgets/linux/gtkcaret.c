@@ -53,6 +53,14 @@ static gboolean draw_cb(GtkWidget *widget, cairo_t *cr)
     cairo_set_source_rgba(cr, bg.red, bg.green, bg.blue, 1.0);
     cairo_rectangle(cr, 0, 0, width, height);
     cairo_fill(cr);
+
+    if (gdk_wnd) {
+        cairo_region_t *rg = cairo_region_create();
+        GdkRectangle grc = {0, 0, 0, 0};
+        cairo_region_union_rectangle(rg, &grc);
+        gdk_window_input_shape_combine_region(gdk_wnd, rg, 0, 0);
+        cairo_region_destroy(rg);
+    }
     return FALSE;
 }
 
@@ -62,6 +70,7 @@ static void gtk_caret_init(GtkCaret* caret)
     caret->blink = TRUE;
     caret->blink_timeout = g_timeout_add(DEFAULT_BLINK_INTERVAL, blink_cb, caret);
     gtk_widget_set_app_paintable(GTK_WIDGET(caret), TRUE);
+    gtk_widget_set_can_focus(GTK_WIDGET(caret), FALSE);
     g_signal_connect(caret, "draw", G_CALLBACK(draw_cb), NULL);
 }
 
