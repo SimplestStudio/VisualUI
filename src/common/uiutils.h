@@ -52,6 +52,10 @@ namespace UIUnicode
 #ifdef _WIN32
 std::wstring DECL_VISUALUI utf8ToWStr(const std::string &str);
 #endif
+size_t DECL_VISUALUI charLenAt(const tstring &str, size_t pos) noexcept;
+size_t DECL_VISUALUI charLenBefore(const tstring &str, size_t pos) noexcept;
+size_t DECL_VISUALUI charPrevPos(const tstring &str, size_t pos) noexcept;
+size_t DECL_VISUALUI charNextPos(const tstring &str, size_t pos) noexcept;
 };
 
 #endif // UIUTILS_H

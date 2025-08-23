@@ -329,3 +329,59 @@ std::wstring UIUnicode::utf8ToWStr(const std::string &str)
     return {};
 }
 #endif
+
+// NOTE:
+//  On Windows: 'pos' is an index in wchar_t units (UTF-16 code units).
+//               Surrogate pairs take 2 wchar_t.
+//  On Linux:   'pos' is a byte offset in UTF-8.
+//               Multi-byte sequences take 2–4 bytes.
+
+// Returns the length of the character starting at position 'pos'.
+// NOTE: See above for meaning of 'pos' on Windows vs Linux.
+size_t UIUnicode::charLenAt(const tstring &str, size_t pos) noexcept
+{
+    const size_t n = str.size();
+    if (pos >= n) return 0;
+#ifdef _WIN32
+    wchar_t ch = str[pos];
+    return (IS_HIGH_SURROGATE(ch) && (pos + 1) < n && IS_LOW_SURROGATE(str[pos + 1])) ? 2 : 1;
+#else
+    const char *cur = str.c_str() + pos;
+    return g_utf8_next_char(cur) - cur;
+#endif
+}
+
+// Returns the length of the character immediately before position 'pos'.
+// NOTE: See above for meaning of 'pos' on Windows vs Linux.
+size_t UIUnicode::charLenBefore(const tstring &str, size_t pos) noexcept
+{
+    const size_t n = str.size();
+    if (pos == 0) return 0;
+    if (pos > n) pos = n;
+#ifdef _WIN32
+    wchar_t ch = str[pos - 1];
+    return (IS_LOW_SURROGATE(ch) && pos >= 2 && IS_HIGH_SURROGATE(str[pos - 2])) ? 2 : 1;
+#else
+    const char *cur = str.c_str() + pos;
+    return cur - g_utf8_prev_char(cur);
+#endif
+}
+
+// Returns the position of the previous character relative to 'pos'.
+// NOTE: See above for meaning of 'pos' on Windows vs Linux.
+size_t UIUnicode::charPrevPos(const tstring &str, size_t pos) noexcept
+{
+    const size_t n = str.size();
+    if (pos == 0) return 0;
+    if (pos > n) pos = n;
+    return pos - charLenBefore(str, pos);
+}
+
+// Returns the position of the next character relative to 'pos'.
+// NOTE: See above for meaning of 'pos' on Windows vs Linux.
+size_t UIUnicode::charNextPos(const tstring &str, size_t pos) noexcept
+{
+    const size_t n = str.size();
+    if (pos >= n) return n;
+    return pos + charLenAt(str, pos);
+}
