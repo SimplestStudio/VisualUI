@@ -24,6 +24,10 @@ public:
     std::vector<std::pair<tstring, tstring>> getAttributes() const;
     std::vector<XmlNode> getChildren() const;
 
+    bool setText(const tstring &text);
+    bool setAttribute(const tstring &name, const tstring &value);
+    XmlNode appendChild(const tstring &tagName);
+
 private:
     friend XmlReader;
     class XmlNodePrivate;
@@ -40,7 +44,11 @@ public:
 
     bool loadFromFile(const tstring &fileName);
     bool loadFromXml(const tstring &xml);
+    XmlNode createDocument(const tstring &rootName);
+    XmlNode createElement(XmlNode &parent, const tstring &tagName);
     XmlNode root() const;
+    bool saveToFile(const tstring &fileName) const;
+    tstring toString() const;
 
 private:
     class XmlReaderPrivate;

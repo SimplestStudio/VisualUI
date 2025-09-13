@@ -289,6 +289,73 @@ std::vector<XmlNode> XmlNode::getChildren() const
     return nodes;
 }
 
+bool XmlNode::setText(const tstring &text)
+{
+    if (!isValid()) return false;
+#ifdef _WIN32
+    BSTR bText = SysAllocString(text.c_str());
+    HRESULT hr = pimpl->pElem->put_text(bText);
+    SysFreeString(bText);
+    return SUCCEEDED(hr);
+#else
+    const xmlChar* content = (const xmlChar*)text.c_str();
+    return xmlNodeSetContent(pimpl->pElem, content) == 0;
+#endif
+}
+
+bool XmlNode::setAttribute(const tstring &name, const tstring &value)
+{
+    if (!isValid()) return false;
+#ifdef _WIN32
+    VARIANT val;
+    VariantInit(&val);
+    val.vt = VT_BSTR;
+    val.bstrVal = SysAllocString(value.c_str());
+    BSTR bName = SysAllocString(name.c_str());
+    HRESULT hr = pimpl->pElem->setAttribute(bName, val);
+    SysFreeString(bName);
+    VariantClear(&val);
+    return SUCCEEDED(hr);
+#else
+    const xmlChar *xmlName = (const xmlChar*)name.c_str();
+    const xmlChar *xmlValue = (const xmlChar*)value.c_str();
+    xmlAttrPtr attr = xmlSetProp(pimpl->pElem, xmlName, xmlValue);
+    return (attr != nullptr);
+#endif
+}
+
+XmlNode XmlNode::appendChild(const tstring& tagName)
+{
+    XmlNode node;
+    if (!isValid()) return node;
+#ifdef _WIN32
+    IXMLDOMDocument *pDoc = nullptr;
+    HRESULT hr = pimpl->pElem->get_ownerDocument(&pDoc);
+    if (FAILED(hr) || !pDoc) return node;
+    IXMLDOMElement *pElem = nullptr;
+    BSTR bTagName = SysAllocString(tagName.c_str());
+    hr = pDoc->createElement(bTagName, &pElem);
+    SysFreeString(bTagName);
+    if (SUCCEEDED(hr) && pElem) {
+        IXMLDOMNode *pNode = nullptr;
+        hr = pimpl->pElem->appendChild(pElem, &pNode);
+        if (SUCCEEDED(hr) && pNode) {
+            node.pimpl->pElem = pElem;
+            pElem->AddRef();
+            pNode->Release();
+        }
+        pElem->Release();
+    }
+    pDoc->Release();
+#else
+    const xmlChar *xmlTagName = (const xmlChar*)tagName.c_str();
+    xmlNodePtr new_node = xmlNewChild(pimpl->pElem, NULL, xmlTagName, NULL);
+    if (new_node) {
+        node.pimpl->pElem = new_node;
+    }
+#endif
+    return node;
+}
 
 /* Xml Reader */
 
@@ -402,6 +469,82 @@ bool XmlReader::loadFromXml(const tstring &xml)
     return true;
 }
 
+XmlNode XmlReader::createDocument(const tstring &rootElementName)
+{
+    XmlNode node;
+    if (!pimpl->initDocument()) return node;
+#ifdef _WIN32
+    IXMLDOMProcessingInstruction *pi = nullptr;
+    BSTR bTarget = SysAllocString(L"xml");
+    BSTR bData = SysAllocString(L"version=\"1.0\" encoding=\"UTF-8\"");
+    HRESULT hr = pimpl->pDoc->createProcessingInstruction(bTarget, bData, &pi);
+    SysFreeString(bData);
+    SysFreeString(bTarget);
+    if (FAILED(hr) || !pi) return node;
+    IXMLDOMNode *piNode = nullptr;
+    hr = pimpl->pDoc->appendChild(pi, &piNode);
+    if (piNode) piNode->Release();
+    pi->Release();
+    if (FAILED(hr)) return node;
+    IXMLDOMElement *pRootElem = nullptr;
+    BSTR bTagName = SysAllocString(rootElementName.c_str());
+    hr = pimpl->pDoc->createElement(bTagName, &pRootElem);
+    SysFreeString(bTagName);
+    if (FAILED(hr) || !pRootElem) return node;
+    IXMLDOMNode* pNode = nullptr;
+    hr = pimpl->pDoc->appendChild(pRootElem, &pNode);
+    if (SUCCEEDED(hr) && pNode) {
+        node.pimpl->pElem = pRootElem;
+        pRootElem->AddRef();
+        pNode->Release();
+    }
+    pRootElem->Release();
+#else
+    pimpl->pDoc = xmlNewDoc((const xmlChar*)"1.0");
+    if (!pimpl->pDoc) return node;
+    pimpl->pDoc->encoding = xmlStrdup((const xmlChar*)"UTF-8");
+    const xmlChar *xmlRootName = (const xmlChar*)rootElementName.c_str();
+    xmlNodePtr root_node = xmlNewNode(NULL, xmlRootName);
+    if (!root_node) return node;
+    xmlDocSetRootElement(pimpl->pDoc, root_node);
+    node.pimpl->pElem = root_node;
+#endif
+    return node;
+}
+
+XmlNode XmlReader::createElement(XmlNode &parent, const tstring &tagName)
+{
+    XmlNode node;
+    if (!pimpl->pDoc || !parent.isValid() || tagName.empty()) return node;
+#ifdef _WIN32
+    IXMLDOMElement *pElem = nullptr;
+    BSTR bTagName = SysAllocString(tagName.c_str());
+    HRESULT hr = pimpl->pDoc->createElement(bTagName, &pElem);
+    SysFreeString(bTagName);
+    if (SUCCEEDED(hr) && pElem) {
+        IXMLDOMNode *pNode = nullptr;
+        hr = parent.pimpl->pElem->appendChild(pElem, &pNode);
+        if (SUCCEEDED(hr) && pNode) {
+            node.pimpl->pElem = pElem;
+            pElem->AddRef();
+            pNode->Release();
+        }
+        pElem->Release();
+    }
+#else
+    xmlNodePtr new_node = xmlNewNode(NULL, (const xmlChar*)tagName.c_str());
+    if (new_node) {
+        xmlNodePtr added_node = xmlAddChild(parent.pimpl->pElem, new_node);
+        if (added_node) {
+            node.pimpl->pElem = added_node;
+        } else {
+            xmlFreeNode(new_node);
+        }
+    }
+#endif
+    return node;
+}
+
 XmlNode XmlReader::root() const
 {
     XmlNode node;
@@ -416,4 +559,48 @@ XmlNode XmlReader::root() const
 #endif
     }
     return node;
+}
+
+bool XmlReader::saveToFile(const tstring &fileName) const
+{
+    if (!pimpl->pDoc) return false;
+#ifdef _WIN32
+    VARIANT vFileName;
+    VariantInit(&vFileName);
+    vFileName.vt = VT_BSTR;
+    vFileName.bstrVal = SysAllocString(fileName.c_str());
+    HRESULT hr = pimpl->pDoc->save(vFileName);
+    VariantClear(&vFileName);
+    return SUCCEEDED(hr);
+#else
+    int result = xmlSaveFileEnc(fileName.c_str(), pimpl->pDoc, "UTF-8");
+    return (result > 0);
+#endif
+}
+
+tstring XmlReader::toString() const
+{
+    if (!pimpl->pDoc) return {};
+#ifdef _WIN32
+    BSTR bstrXML = nullptr;
+    HRESULT hr = pimpl->pDoc->get_xml(&bstrXML);
+    if (SUCCEEDED(hr) && bstrXML) {
+        tstring xmlString(bstrXML);
+        SysFreeString(bstrXML);
+        return xmlString;
+    }
+#else
+    int bufferSize = 0;
+    xmlChar* xmlBuffer = nullptr;
+    xmlDocDumpMemory(pimpl->pDoc, &xmlBuffer, &bufferSize);
+    if (xmlBuffer && bufferSize > 0) {
+        tstring xmlString((char*)xmlBuffer, bufferSize);
+        xmlFree(xmlBuffer);
+        return xmlString;
+    }
+    if (xmlBuffer) {
+        xmlFree(xmlBuffer);
+    }
+#endif
+    return {};
 }
