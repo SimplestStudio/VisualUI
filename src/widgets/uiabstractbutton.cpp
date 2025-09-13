@@ -114,6 +114,8 @@ bool UIAbstractButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *re
 
     case WM_MOUSELEAVE: {
         if (!m_disabled) {
+            if (m_tooltipHandler)
+                m_tooltipHandler->skipToolTip();
             palette()->setCurrentState(Palette::Normal);
             repaint();
         }
@@ -166,6 +168,8 @@ bool UIAbstractButton::event(uint ev_type, void *param)
 
     case GDK_LEAVE_NOTIFY: {
         if (!m_disabled) {
+            if (m_tooltipHandler)
+                m_tooltipHandler->skipToolTip();
             palette()->setCurrentState(Palette::Normal);
             repaint();
         }
@@ -190,6 +194,8 @@ bool UIAbstractButton::event(uint ev_type, void *param)
 void UIAbstractButton::click()
 {
     if (underMouse()) {
+        if (m_tooltipHandler)
+            m_tooltipHandler->skipToolTip();
         for (auto it = m_click_callbacks.begin(); it != m_click_callbacks.end(); it++) {
             if (it->second)
                 (it->second)();
