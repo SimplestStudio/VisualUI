@@ -3,10 +3,10 @@
 
 #include "uidefines.h"
 #include "uicommon.h"
-#include "uitimer.h"
 
 class UIWidget;
 class UIToolTip;
+class UITimer;
 class DECL_VISUALUI UIToolTipHandler
 {
 public:

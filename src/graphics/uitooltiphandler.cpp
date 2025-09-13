@@ -3,6 +3,7 @@
 #include "uitooltip.h"
 #include "uiwidget.h"
 #include "uicursor.h"
+#include "uitimer.h"
 
 UIToolTipHandler::UIToolTipHandler(UIWidget* parent) :
     m_parent(parent),
@@ -71,11 +72,12 @@ void UIToolTipHandler::onToolTipCheck()
         int width = 0, height = 0;
         UIFontMetrics fm;
         fm.textSize(m_parent, m_parent->m_hFont, m_tooltipText, width, height);
-        width += 20 * m_parent->dpiRatio();
-        height += 10 * m_parent->dpiRatio();
+        double dpi = m_parent->dpiRatio();
+        width += 20 * dpi;
+        height += 10 * dpi;
         UICursor::globalPos(x, y);
         m_lastCursorPos = Point(x, y);
-        m_tooltip = new UIToolTip(m_parent->topLevelWidget(), Rect(x + 10 * m_parent->dpiRatio(), y + 10 * m_parent->dpiRatio(), width, height));
+        m_tooltip = new UIToolTip(m_parent->topLevelWidget(), Rect(x + 10 * dpi, y + 10 * dpi, width, height));
         m_tooltip->setObjectGroupId(_T("ToolTip"));
         m_tooltip->setText(m_tooltipText);
         m_tooltip->show();
