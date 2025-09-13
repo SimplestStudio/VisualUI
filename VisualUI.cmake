@@ -34,7 +34,7 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/core/uifontmetrics.h
     ${UICLASSES}/core/uitimer.h
     ${UICLASSES}/core/uieventloop.h
-    ${UICLASSES}/core/uixmlreader.h
+    ${UICLASSES}/core/uixmldocument.h
     ${UICLASSES}/dialogs/uipopupmessage.h
     ${UICLASSES}/dialogs/uidialog.h
     ${UICLASSES}/dialogs/uifiledialog.h
@@ -80,7 +80,7 @@ set(VISUALUI_SOURCES
     ${UICLASSES}/core/uifontmetrics.cpp
     ${UICLASSES}/core/uitimer.cpp
     ${UICLASSES}/core/uieventloop.cpp
-    ${UICLASSES}/core/uixmlreader.cpp
+    ${UICLASSES}/core/uixmldocument.cpp
     ${UICLASSES}/dialogs/uipopupmessage.cpp
     ${UICLASSES}/dialogs/uidialog.cpp
     ${UICLASSES}/dialogs/uifiledialog.cpp

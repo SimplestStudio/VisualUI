@@ -1,4 +1,4 @@
-#include "uixmlreader.h"
+#include "uixmldocument.h"
 #ifdef _WIN32
 # include <msxml2.h>
 # include <comdef.h>
@@ -357,12 +357,12 @@ XmlNode XmlNode::appendChild(const tstring& tagName)
     return node;
 }
 
-/* Xml Reader */
+/* Xml Document */
 
-class XmlReader::XmlReaderPrivate
+class XmlDocument::XmlDocumentPrivate
 {
 public:
-    XmlReaderPrivate()
+    XmlDocumentPrivate()
     {
 #ifdef _WIN32
         CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
@@ -371,7 +371,7 @@ public:
 #endif
     }
 
-    ~XmlReaderPrivate()
+    ~XmlDocumentPrivate()
     {
         if (pDoc) {
 #ifdef _WIN32
@@ -418,18 +418,18 @@ public:
 };
 
 
-XmlReader::XmlReader() :
-    pimpl(new XmlReaderPrivate)
+XmlDocument::XmlDocument() :
+    pimpl(new XmlDocumentPrivate)
 {
 
 }
 
-XmlReader::~XmlReader()
+XmlDocument::~XmlDocument()
 {
     delete pimpl, pimpl = nullptr;
 }
 
-bool XmlReader::loadFromFile(const tstring &fileName)
+bool XmlDocument::loadFromFile(const tstring &fileName)
 {
     if (pimpl->initDocument()) {
 #ifdef _WIN32
@@ -449,7 +449,7 @@ bool XmlReader::loadFromFile(const tstring &fileName)
     return true;
 }
 
-bool XmlReader::loadFromXml(const tstring &xml)
+bool XmlDocument::loadFromXml(const tstring &xml)
 {
     if (pimpl->initDocument()) {
 #ifdef _WIN32
@@ -469,7 +469,7 @@ bool XmlReader::loadFromXml(const tstring &xml)
     return true;
 }
 
-XmlNode XmlReader::createDocument(const tstring &rootElementName)
+XmlNode XmlDocument::createDocument(const tstring &rootElementName)
 {
     XmlNode node;
     if (!pimpl->initDocument()) return node;
@@ -512,7 +512,7 @@ XmlNode XmlReader::createDocument(const tstring &rootElementName)
     return node;
 }
 
-XmlNode XmlReader::createElement(XmlNode &parent, const tstring &tagName)
+XmlNode XmlDocument::createElement(XmlNode &parent, const tstring &tagName)
 {
     XmlNode node;
     if (!pimpl->pDoc || !parent.isValid() || tagName.empty()) return node;
@@ -545,7 +545,7 @@ XmlNode XmlReader::createElement(XmlNode &parent, const tstring &tagName)
     return node;
 }
 
-XmlNode XmlReader::root() const
+XmlNode XmlDocument::root() const
 {
     XmlNode node;
     if (pimpl && pimpl->pDoc) {
@@ -561,7 +561,7 @@ XmlNode XmlReader::root() const
     return node;
 }
 
-bool XmlReader::saveToFile(const tstring &fileName) const
+bool XmlDocument::saveToFile(const tstring &fileName) const
 {
     if (!pimpl->pDoc) return false;
 #ifdef _WIN32
@@ -578,7 +578,7 @@ bool XmlReader::saveToFile(const tstring &fileName) const
 #endif
 }
 
-tstring XmlReader::toString() const
+tstring XmlDocument::toString() const
 {
     if (!pimpl->pDoc) return {};
 #ifdef _WIN32

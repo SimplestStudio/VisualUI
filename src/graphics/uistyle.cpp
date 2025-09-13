@@ -1,5 +1,5 @@
 #include "uistyle.h"
-#include "uixmlreader.h"
+#include "uixmldocument.h"
 #include "uiutils.h"
 #include "uiwidget.h"
 #include "uipalette.h"
@@ -92,7 +92,7 @@ public:
         }
     }
 
-    void parseThemes(const XmlReader &reader)
+    void parseThemes(const XmlDocument &reader)
     {
         XmlNode root = reader.root();
         if (!root.isValid())
@@ -139,7 +139,7 @@ public:
         }
     }
 
-    void parseStyles(const XmlReader &reader)
+    void parseStyles(const XmlDocument &reader)
     {
         XmlNode root = reader.root();
         if (!root.isValid())
@@ -432,7 +432,7 @@ void UIStyle::loadThemesFromResource(int id)
     UIUtils::loadStringResource(xml, id);
     if (xml.empty())
         return;
-    XmlReader reader;
+    XmlDocument reader;
     if (!reader.loadFromXml(xml))
         return;
     pimpl->parseThemes(reader);
@@ -446,7 +446,7 @@ void UIStyle::loadStylesFromResource(int id)
     UIUtils::loadStringResource(xml, id);
     if (xml.empty())
         return;
-    XmlReader reader;
+    XmlDocument reader;
     if (!reader.loadFromXml(xml))
         return;
     pimpl->parseStyles(reader);
@@ -459,7 +459,7 @@ void UIStyle::loadThemesFromResource(GResource *res, const tstring &id)
         UIUtils::loadStringResource(xml, res, id.c_str());
         if (xml.empty())
             return;
-        XmlReader reader;
+        XmlDocument reader;
         if (!reader.loadFromXml(xml))
             return;
         pimpl->parseThemes(reader);
@@ -475,7 +475,7 @@ void UIStyle::loadStylesFromResource(GResource *res, const tstring &id)
         UIUtils::loadStringResource(xml, res, id.c_str());
         if (xml.empty())
             return;
-        XmlReader reader;
+        XmlDocument reader;
         if (!reader.loadFromXml(xml))
             return;
         pimpl->parseStyles(reader);
@@ -487,7 +487,7 @@ void UIStyle::loadThemesFromFile(const tstring &filePath)
 {
     if (filePath.empty())
         return;
-    XmlReader reader;
+    XmlDocument reader;
     if (!reader.loadFromFile(filePath))
         return;
     pimpl->parseThemes(reader);
@@ -499,7 +499,7 @@ void UIStyle::loadStylesFromFile(const tstring &filePath)
 {
     if (filePath.empty())
         return;
-    XmlReader reader;
+    XmlDocument reader;
     if (!reader.loadFromFile(filePath))
         return;
     pimpl->parseStyles(reader);

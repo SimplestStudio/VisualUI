@@ -1,11 +1,11 @@
-#ifndef UIXMLREADER_H
-#define UIXMLREADER_H
+#ifndef UIXMLDOCUMENT_H
+#define UIXMLDOCUMENT_H
 
 #include "uidefines.h"
 #include <vector>
 
 
-class XmlReader;
+class XmlDocument;
 class DECL_VISUALUI XmlNode
 {
 public:
@@ -29,18 +29,18 @@ public:
     XmlNode appendChild(const tstring &tagName);
 
 private:
-    friend XmlReader;
+    friend XmlDocument;
     class XmlNodePrivate;
     XmlNodePrivate *pimpl;
 };
 
 
-class DECL_VISUALUI XmlReader
+class DECL_VISUALUI XmlDocument
 {
 public:
 
-    XmlReader();
-    ~XmlReader();
+    XmlDocument();
+    ~XmlDocument();
 
     bool loadFromFile(const tstring &fileName);
     bool loadFromXml(const tstring &xml);
@@ -51,8 +51,8 @@ public:
     tstring toString() const;
 
 private:
-    class XmlReaderPrivate;
-    XmlReaderPrivate *pimpl;
+    class XmlDocumentPrivate;
+    XmlDocumentPrivate *pimpl;
 };
 
-#endif // UIXMLREADER_H
+#endif // UIXMLDOCUMENT_H
