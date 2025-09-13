@@ -15,6 +15,7 @@ public:
 
     void setToolTipText(const tstring &text) noexcept;
     void handleMouseMove();
+    void skipToolTip();
     void hideToolTip();
 
 private:

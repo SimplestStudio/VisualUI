@@ -44,6 +44,12 @@ void UIToolTipHandler::handleMouseMove()
     }
 }
 
+void UIToolTipHandler::skipToolTip()
+{
+    if (!m_tooltip && m_checkTimer->isActive())
+        m_checkTimer->stop();
+}
+
 void UIToolTipHandler::hideToolTip()
 {
     m_checkTimer->stop();
