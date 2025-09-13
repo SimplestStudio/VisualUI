@@ -299,7 +299,8 @@ bool XmlNode::setText(const tstring &text)
     return SUCCEEDED(hr);
 #else
     const xmlChar* content = (const xmlChar*)text.c_str();
-    return xmlNodeSetContent(pimpl->pElem, content) == 0;
+    xmlNodeSetContent(pimpl->pElem, content);
+    return true;
 #endif
 }
 
