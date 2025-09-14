@@ -55,7 +55,7 @@ void UIconHandler::setIcon(const tstring &path, int w, int h)
         g_object_unref(m_hBmp);
         m_hBmp = nullptr;
     }
-    m_hBmp = gdk_pixbuf_new_from_file_at_scale(path.c_str(), 2*w, 2*h, FALSE, NULL);
+    m_hBmp = gdk_pixbuf_new_from_file_at_scale(path.c_str(), w, h, FALSE, NULL);
 #endif
     m_owner->update();
 }
@@ -117,7 +117,7 @@ void UIconHandler::setIcon(const char *id, int w, int h)
         g_object_unref(m_hBmp);
         m_hBmp = nullptr;
     }
-    m_hBmp = gdk_pixbuf_new_from_resource_at_scale(id, 2*w, 2*h, FALSE, NULL);
+    m_hBmp = gdk_pixbuf_new_from_resource_at_scale(id, w, h, FALSE, NULL);
     m_owner->update();
 }
 
