@@ -403,6 +403,8 @@ void UILineEdit::onPaint(const RECT &rc)
 #else
     if (m_hBmp)
         de->DrawIcon(m_hBmp);
+    if (m_hSvg)
+        de->DrawSvgIcon(m_hSvg);
 #endif
     if (!m_viewportText.empty())
         de->DrawString(rc, m_viewportText, m_hFont);

@@ -134,17 +134,20 @@ elseif (UNIX AND NOT APPLE)
     pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
     pkg_check_modules(LIBXML2 REQUIRED libxml-2.0)
     pkg_check_modules(GIO REQUIRED gio-2.0)
+    pkg_check_modules(RSVG REQUIRED librsvg-2.0)
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE GTK3_FOUND)
     target_include_directories(${PROJECT_NAME} PRIVATE
         ${GTK3_INCLUDE_DIRS}
         ${LIBXML2_INCLUDE_DIRS}
         ${GIO_INCLUDE_DIRS}
+        ${RSVG_INCLUDE_DIRS}
     )
     target_link_libraries(${PROJECT_NAME} PRIVATE
         X11
         ${GTK3_LIBRARIES}
         ${LIBXML2_LIBRARIES}
         ${GIO_LIBRARIES}
+        ${RSVG_LIBRARIES}
     )
 endif()

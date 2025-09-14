@@ -12,6 +12,7 @@
 #endif
 
 
+struct _RsvgHandle;
 class UIDrawningSurface;
 class DECL_VISUALUI UIDrawingEngine
 {
@@ -56,6 +57,7 @@ public:
     void LayeredChildEnd() noexcept;
 #else
     void Begin(UIDrawningSurface*, cairo_t*, Rect *rc) noexcept;
+    void DrawSvgIcon(_RsvgHandle *hSvg) const noexcept;
     void End() noexcept;
 #endif
 

@@ -121,6 +121,8 @@ void UIButton::onPaint(const RECT &rc)
 #else
     if (m_hBmp)
         de->DrawIcon(m_hBmp);
+    if (m_hSvg)
+        de->DrawSvgIcon(m_hSvg);
 #endif
     if (!m_text.empty())
         de->DrawString(rc, m_text, m_hFont);

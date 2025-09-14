@@ -6,10 +6,11 @@
 #ifdef _WIN32
 # define setVectorIcon(id, w, h) setEMFIcon(id, w, h)
 #else
-# define setVectorIcon(path, w, h) setIcon(path, w, h)
+# define setVectorIcon(id, w, h) setSVGIcon(id, w, h)
 #endif
 
 class UIWidget;
+struct _RsvgHandle;
 class DECL_VISUALUI UIconHandler
 {
 public:
@@ -24,6 +25,8 @@ public:
     void setImage(int id, int w, int h);
 #else
     void setIcon(const char *id, int w, int h);
+    void setSVGIcon(const tstring &path, int w, int h);
+    void setSVGIcon(const char *id, int w, int h);
     void setImage(const char *id, int w, int h);
 #endif
     void setImage(const tstring &path, int w, int h);
@@ -36,6 +39,8 @@ protected:
 #ifdef _WIN32
     HICON m_hIcon;
     Gdiplus::Metafile *m_hEmf;
+#else
+    _RsvgHandle *m_hSvg;
 #endif
 
 private:

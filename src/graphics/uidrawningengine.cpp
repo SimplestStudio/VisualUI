@@ -7,6 +7,7 @@
 #else
 # include <glib.h>
 # include <pango/pangocairo.h>
+# include <librsvg-2.0/librsvg/rsvg.h>
 # include <cmath>
 # define GetRValue(rgb) ((double)((BYTE)(rgb))/255)
 # define GetGValue(rgb) ((double)((BYTE)(((WORD)(rgb)) >> 8))/255)
@@ -1104,6 +1105,24 @@ void UIDrawingEngine::Begin(UIDrawningSurface *ds, cairo_t *cr, Rect *rc) noexce
     m_ds = ds;
     m_cr = cr;
     m_rc = rc;
+}
+
+void UIDrawingEngine::DrawSvgIcon(_RsvgHandle *hSvg) const noexcept
+{
+    const Metrics *metrics = m_ds->metrics();
+    Margins mrg;
+    GetIconMargins(mrg, metrics, m_dpi, m_rtl);
+    Rect dst_rc;
+    GetIconPlacement(dst_rc, *m_rc, mrg, metrics, m_dpi, m_rtl);
+
+    RsvgDimensionData dm;
+    rsvg_handle_get_dimensions(hSvg, &dm);
+
+    cairo_save(m_cr);
+    cairo_translate(m_cr, dst_rc.x, dst_rc.y);
+    cairo_scale(m_cr, (double)dst_rc.width / dm.width, (double)dst_rc.height / dm.height);
+    rsvg_handle_render_cairo(hSvg, m_cr);
+    cairo_restore(m_cr);
 }
 
 void UIDrawingEngine::End() noexcept

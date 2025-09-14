@@ -3,6 +3,8 @@
 #include "uiwidget.h"
 #ifdef _WIN32
 # include "uiutils.h"
+#else
+# include <librsvg-2.0/librsvg/rsvg.h>
 #endif
 
 
@@ -11,6 +13,8 @@ UIconHandler::UIconHandler(UIWidget *owner) :
 #ifdef _WIN32
     m_hIcon(nullptr),
     m_hEmf(nullptr),
+#else
+    m_hSvg(nullptr),
 #endif
     m_owner(owner)
 {
@@ -33,6 +37,10 @@ UIconHandler::~UIconHandler()
         m_hBmp = nullptr;
     }
 #else
+    if (m_hSvg) {
+        g_object_unref(m_hSvg);
+        m_hSvg = nullptr;
+    }
     if (m_hBmp) {
         g_object_unref(m_hBmp);
         m_hBmp = nullptr;
@@ -118,6 +126,38 @@ void UIconHandler::setIcon(const char *id, int w, int h)
         m_hBmp = nullptr;
     }
     m_hBmp = gdk_pixbuf_new_from_resource_at_scale(id, w, h, FALSE, NULL);
+    m_owner->update();
+}
+
+void UIconHandler::setSVGIcon(const tstring &path, int w, int h)
+{
+    if (m_hSvg) {
+        g_object_unref(m_hSvg);
+        m_hSvg = nullptr;
+    }
+    m_owner->metrics()->setMetrics(Metrics::IconWidth, w);
+    m_owner->metrics()->setMetrics(Metrics::IconHeight, h);
+    m_hSvg = rsvg_handle_new_from_file(path.c_str(), NULL);
+    m_owner->update();
+}
+
+void UIconHandler::setSVGIcon(const char *id, int w, int h)
+{
+    if (m_hSvg) {
+        g_object_unref(m_hSvg);
+        m_hSvg = nullptr;
+    }
+    m_owner->metrics()->setMetrics(Metrics::IconWidth, w);
+    m_owner->metrics()->setMetrics(Metrics::IconHeight, h);
+    GBytes *bytes = g_resources_lookup_data(id, G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
+    if (bytes) {
+        gsize size = 0;
+        gconstpointer data = g_bytes_get_data(bytes, &size);
+        if (data && size > 0) {
+            m_hSvg = rsvg_handle_new_from_data((const guint8*)data, size, NULL);
+        }
+        g_bytes_unref(bytes);
+    }
     m_owner->update();
 }
 
