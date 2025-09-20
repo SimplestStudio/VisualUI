@@ -452,9 +452,9 @@ void UIDrawingEngine::DrawCheckBox(const tstring &text, PlatformFont hFont, RECT
         pen.SetWidth(metrics->value(Metrics::AlternatePrimitiveWidth) * m_dpi);
         pen.SetColor(ColorFromColorRef(palette->color(Palette::AlternatePrimitive)));
         Gdiplus::PointF pts[3] = {
-            Gdiplus::PointF(float(x + 2 * m_dpi), float(y + icon_height/2 - 1 * m_dpi)),
-            Gdiplus::PointF(float(x + icon_width/2 - 2 * m_dpi), float(y + icon_height - 5 * m_dpi)),
-            Gdiplus::PointF(float(x + icon_width - 3 * m_dpi), float(y + 4 * m_dpi))
+            Gdiplus::PointF(float(x + (m_rtl ? icon_width - 3 * m_dpi : 2 * m_dpi)), float(y + icon_height/2 - 1 * m_dpi)),
+            Gdiplus::PointF(float(x + icon_width/2 + (m_rtl ? 1 * m_dpi : - 2 * m_dpi)), float(y + icon_height - 5 * m_dpi)),
+            Gdiplus::PointF(float(x + (m_rtl ? 2 * m_dpi : icon_width - 3 * m_dpi)), float(y + 4 * m_dpi))
         };
         m_graphics->DrawLines(&pen, pts, 3);
     }
@@ -943,7 +943,7 @@ void UIDrawingEngine::DrawTopBorder(int brdWidth, COLORREF brdColor) const
     DeleteObject(pen);
 }
 
-void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf) const noexcept
+void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf) noexcept
 {
     const Metrics *metrics = m_ds->metrics();
     Margins mrg;
@@ -953,7 +953,20 @@ void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf) const noexcept
     m_graphics->SetInterpolationMode(Gdiplus::InterpolationModeHighQuality);
     m_graphics->SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
     m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+    if (m_rtl) {
+        if (!m_root_is_layered) {
+            m_origMatrix = new Gdiplus::Matrix;
+            m_graphics->GetTransform(m_origMatrix);
+            Gdiplus::Matrix rtlMatrix(-1.0f, 0.0f, 0.0f, 1.0f, float(m_rc->right + m_rc->left - 1), 0.0f);
+            m_graphics->SetTransform(&rtlMatrix);
+        }
+    }
     m_graphics->DrawImage(hEmf, dst_rc.x, dst_rc.y, dst_rc.width, dst_rc.height);
+    if (m_rtl && m_origMatrix) {
+        m_graphics->SetTransform(m_origMatrix);
+        delete m_origMatrix;
+        m_origMatrix = nullptr;
+    }
     m_graphics->SetInterpolationMode(Gdiplus::InterpolationModeDefault);
     m_graphics->SetPixelOffsetMode(Gdiplus::PixelOffsetModeDefault);
     m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeDefault);

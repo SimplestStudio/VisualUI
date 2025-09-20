@@ -46,7 +46,7 @@ public:
 #ifdef _WIN32
     void Begin(UIDrawningSurface*, HWND, RECT *rc, double dpi = 1.0);
     void DrawTopBorder(int, COLORREF) const;
-    void DrawEmfIcon(Gdiplus::Metafile *hEmf) const noexcept;
+    void DrawEmfIcon(Gdiplus::Metafile *hEmf) noexcept;
     void DrawImage(Gdiplus::Bitmap *hBmp) const noexcept;
     void End() noexcept;
 
