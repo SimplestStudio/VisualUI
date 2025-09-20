@@ -55,13 +55,15 @@ void UIAbstractButton::adjustSizeBasedOnContent()
     const Metrics *mtr = metrics();
     UIFontMetrics fm;
     fm.textSize(this, m_hFont, m_text, width, height);
+    width /= m_dpi_ratio;
+    height /= m_dpi_ratio;
     int w = width + 2 * mtr->value(Metrics::IconWidth) + mtr->value(Metrics::TextMarginLeft) + mtr->value(Metrics::TextMarginRight);
 #ifdef _WIN32
     int h = max(height + mtr->value(Metrics::TextMarginTop) + mtr->value(Metrics::TextMarginBottom), mtr->value(Metrics::IconHeight));
 #else
     int h = std::max(height + mtr->value(Metrics::TextMarginTop) + mtr->value(Metrics::TextMarginBottom), mtr->value(Metrics::IconHeight));
 #endif
-    resize(w, h);
+    setBaseSize(w, h);
 }
 
 int UIAbstractButton::onClick(const FnVoidVoid &callback)
