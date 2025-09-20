@@ -30,19 +30,19 @@ static void RoundedPath(Gdiplus::GraphicsPath &ph, unsigned char corner, float x
     if (d > height) d = height;
 
     // ph.StartFigure();
-    if (corner & UIDrawingEngine::CornerLTop)
+    if (rad != 0 && corner & UIDrawingEngine::CornerLTop)
         ph.AddArc(x, y, d, d, 180, 90);
     else ph.AddLine(x, y, x + rad, y);
 
-    if (corner & UIDrawingEngine::CornerRTop)
+    if (rad != 0 && corner & UIDrawingEngine::CornerRTop)
         ph.AddArc(x + width - d, y, d, d, 270, 90);
     else ph.AddLine(x + width - rad, y, x + width, y);
 
-    if (corner & UIDrawingEngine::CornerRBottom)
+    if (rad != 0 && corner & UIDrawingEngine::CornerRBottom)
         ph.AddArc(x + width - d, y + height - d, d, d, 0, 90);
     else ph.AddLine(x + width, y + height - rad, x + width, y + height);
 
-    if (corner & UIDrawingEngine::CornerLBottom)
+    if (rad != 0 && corner & UIDrawingEngine::CornerLBottom)
         ph.AddArc(x, y + height - d, d, d, 90, 90);
     else ph.AddLine(x + rad, y + height, x, y + height);
 
@@ -166,7 +166,7 @@ void UIDrawingEngine::DrawFlatRect(bool clearBkg) const noexcept
 {
     const Metrics *metrics = m_ds->metrics();
     const Palette *palette = m_ds->palette();
-    float brd_w = metrics->value(Metrics::BorderWidth) * m_dpi;
+    float brd_w = roundf(metrics->value(Metrics::BorderWidth) * m_dpi);
 #ifdef _WIN32
     if (clearBkg) {
         m_graphics->Clear(ColorFromColorRef(palette->color(Palette::Background)));
@@ -176,8 +176,9 @@ void UIDrawingEngine::DrawFlatRect(bool clearBkg) const noexcept
     }
 
     if (brd_w != 0) {
+        float d = brd_w / 2.0f;
         Gdiplus::Pen pen(ColorFromColorRef(palette->color(Palette::Border)), brd_w);
-        m_graphics->DrawRectangle(&pen, (int)m_rc->left, (int)m_rc->top, m_rc->right - m_rc->left - 1, m_rc->bottom - m_rc->top - 1);
+        m_graphics->DrawRectangle(&pen, m_rc->left + d - 0.5f, m_rc->top + d, m_rc->right - m_rc->left - brd_w, m_rc->bottom - m_rc->top - brd_w);
     }
 #else
     COLORREF rgb = palette->color(Palette::Background);
@@ -197,7 +198,7 @@ void UIDrawingEngine::DrawRoundedRect(unsigned char corner, int offset, bool cle
 {
     const Metrics *metrics = m_ds->metrics();
     const Palette *palette = m_ds->palette();
-    float brd_w = metrics->value(Metrics::BorderWidth) * m_dpi;
+    float brd_w = roundf(metrics->value(Metrics::BorderWidth) * m_dpi);
     float rad = metrics->value(Metrics::BorderRadius) * m_dpi;
 #ifdef _WIN32
     float x = m_rc->left + offset;
@@ -626,7 +627,7 @@ void UIDrawingEngine::DrawProgressBar(int progress, int pulse_pos) const noexcep
     const Palette *palette = m_ds->palette();
     Margins mrg;
     GetIconMargins(mrg, metrics, m_dpi, m_rtl);
-    double brd_w = metrics->value(Metrics::BorderWidth) * m_dpi;
+    double brd_w = round(metrics->value(Metrics::BorderWidth) * m_dpi);
 #ifdef _WIN32
     int x = m_rc->left + brd_w + mrg.left;
     int y = m_rc->top + brd_w + mrg.top;
@@ -634,7 +635,8 @@ void UIDrawingEngine::DrawProgressBar(int progress, int pulse_pos) const noexcep
     int height = m_rc->bottom - m_rc->top - brd_w * 2 - mrg.bottom - mrg.top - 1;
     int rad = metrics->value(Metrics::BorderRadius) * m_dpi;
 
-    m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    if (rad != 0)
+        m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
     m_graphics->Clear(ColorFromColorRef(palette->color(Palette::Background)));
 
     Gdiplus::GraphicsPath ph;
