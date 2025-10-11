@@ -1,6 +1,7 @@
 #include "uilayoutitem.h"
 #include "uiwidget.h"
 #include "uispacer.h"
+#include <cmath>
 
 UILayoutItem::UILayoutItem() :
     wgt(nullptr),
@@ -40,8 +41,8 @@ void UILayoutItem::calcSize(double dpi)
         wgt->size(&width, &height);
     } else
     if (spr) {
-        width = spr->width*dpi;
-        height = spr->height*dpi;
+        width = roundf(spr->width*dpi);
+        height = roundf(spr->height*dpi);
     }
 }
 

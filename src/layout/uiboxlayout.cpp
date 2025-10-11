@@ -66,11 +66,11 @@ void UIBoxLayout::onResize(int w, int h, double dpi) noexcept
     m_width = w; m_height = h;
     int amount = m_items.size();
     if (amount > 0) {
-        int x = m_margins.left * dpi;
-        int y = m_margins.top * dpi;
-        int sum_width = w - (m_margins.right + m_margins.left) * dpi;
-        int sum_height = h - (m_margins.bottom + m_margins.top) * dpi;
-        int spacing = m_spacing * dpi;
+        int x = (int)std::round(m_margins.left * dpi);
+        int y = (int)std::round(m_margins.top * dpi);
+        int sum_width = w - x - (int)std::round(m_margins.right * dpi);
+        int sum_height = h - y - (int)std::round(m_margins.bottom * dpi);
+        int spacing = (int)std::round(m_spacing * dpi);
         int num_fixed = 0;
         int sum_fixed_width_or_height = 0;
         int last_expanding = -1;
