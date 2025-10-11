@@ -218,7 +218,7 @@ void UIDrawingEngine::DrawRoundedRect(unsigned char corner, int offset, bool cle
     if (brd_w != 0) {
         float d = brd_w / 2.0;
         ph.Reset();
-        RoundedPath(ph, corner, x + d, y + d, width - 2*d, height - 2*d, rad - d);
+        RoundedPath(ph, corner, x + d, y + d, width - brd_w, height - brd_w, rad - d);
         Gdiplus::Pen pen(ColorFromColorRef(palette->color(Palette::Border)), brd_w);
         m_graphics->DrawPath(&pen, &ph);
     }
