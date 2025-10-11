@@ -35,6 +35,8 @@ namespace UIUtils
     WindowServer DECL_VISUALUI windowServer();
     void DECL_VISUALUI loadStringResource(tstring &str, GResource *res, const char *resourcePath);
 #endif
+    // Checks whether `addr` points to a block allocated on the process heap.
+    // Used before freeing memory to avoid accessing invalid or foreign memory regions.
     bool isAllocOnHeap(void *addr);
 };
 
@@ -52,9 +54,26 @@ namespace UIUnicode
 #ifdef _WIN32
 std::wstring DECL_VISUALUI utf8ToWStr(const std::string &str);
 #endif
+// NOTE:
+//  On Windows: 'pos' is an index in wchar_t units (UTF-16 code units).
+//               Surrogate pairs take 2 wchar_t.
+//  On Linux:   'pos' is a byte offset in UTF-8.
+//               Multi-byte sequences take 2–4 bytes.
+
+// Returns the length of the character starting at position 'pos'.
+// NOTE: See above for meaning of 'pos' on Windows vs Linux.
 size_t DECL_VISUALUI charLenAt(const tstring &str, size_t pos) noexcept;
+
+// Returns the length of the character immediately before position 'pos'.
+// NOTE: See above for meaning of 'pos' on Windows vs Linux.
 size_t DECL_VISUALUI charLenBefore(const tstring &str, size_t pos) noexcept;
+
+// Returns the position of the previous character relative to 'pos'.
+// NOTE: See above for meaning of 'pos' on Windows vs Linux.
 size_t DECL_VISUALUI charPrevPos(const tstring &str, size_t pos) noexcept;
+
+// Returns the position of the next character relative to 'pos'.
+// NOTE: See above for meaning of 'pos' on Windows vs Linux.
 size_t DECL_VISUALUI charNextPos(const tstring &str, size_t pos) noexcept;
 };
 
