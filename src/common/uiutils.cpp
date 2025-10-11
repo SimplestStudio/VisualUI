@@ -136,18 +136,6 @@ DWORD UIUtils::regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value)
     return dwValue;
 }
 
-double UIUtils::screenDpiAtPoint(const POINT &pt)
-{
-    HMONITOR hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
-    return hMon ? ScreenDpiFromMonitor(hMon) : 1.0;
-}
-
-double UIUtils::screenDpiAtRect(const RECT &rc)
-{
-    HMONITOR hMon = MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
-    return hMon ? ScreenDpiFromMonitor(hMon) : 1.0;
-}
-
 void UIUtils::loadImageResource(Gdiplus::Bitmap *&hBmp, int id, LPCWSTR type)
 {
     if (IStream *pStream = LoadResourceToStream(id, type)) {
@@ -286,6 +274,18 @@ bool UIUtils::isAllocOnHeap(void *addr) {
 }
 
 #ifdef _WIN32
+double UIScreen::dpiAtPoint(const POINT &pt)
+{
+    HMONITOR hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+    return hMon ? ScreenDpiFromMonitor(hMon) : 1.0;
+}
+
+double UIScreen::dpiAtRect(const RECT &rc)
+{
+    HMONITOR hMon = MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
+    return hMon ? ScreenDpiFromMonitor(hMon) : 1.0;
+}
+
 bool UILocalization::isRtlLanguage(unsigned long lcid)
 {
     if (UIUtils::winVersion() >= UIUtils::WinVer::Win7) {

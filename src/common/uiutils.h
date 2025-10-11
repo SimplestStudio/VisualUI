@@ -19,8 +19,6 @@ namespace UIUtils
     WinVer DECL_VISUALUI winVersion() noexcept;
     std::wstring DECL_VISUALUI currentUserSID();
     DWORD DECL_VISUALUI regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value);
-    double DECL_VISUALUI screenDpiAtPoint(const POINT &pt);
-    double DECL_VISUALUI screenDpiAtRect(const RECT &rc);
     void DECL_VISUALUI loadImageResource(Gdiplus::Bitmap* &hBmp, int id, LPCWSTR type);
     void DECL_VISUALUI loadEmfResource(Gdiplus::Metafile* &hBmp, int id, LPCWSTR type);
     void DECL_VISUALUI loadStringResource(tstring &str, int id);
@@ -38,6 +36,15 @@ namespace UIUtils
     // Checks whether `addr` points to a block allocated on the process heap.
     // Used before freeing memory to avoid accessing invalid or foreign memory regions.
     bool isAllocOnHeap(void *addr);
+};
+
+namespace UIScreen
+{
+#ifdef _WIN32
+    double DECL_VISUALUI dpiAtPoint(const POINT &pt);
+    double DECL_VISUALUI dpiAtRect(const RECT &rc);
+#else
+#endif
 };
 
 namespace UILocalization

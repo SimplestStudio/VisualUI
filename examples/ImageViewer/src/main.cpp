@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     Rect rc(100, 100, 900, 600);
 #ifdef _WIN32
     RECT _rc{rc.x, rc.y, rc.x + rc.width, rc.y + rc.height};
-    screenDpi = UIUtils::screenDpiAtRect(_rc);
+    screenDpi = UIScreen::dpiAtRect(_rc);
     rc = Rect(rc.x * screenDpi, rc.y * screenDpi, rc.width * screenDpi, rc.height * screenDpi);
 #endif
 
