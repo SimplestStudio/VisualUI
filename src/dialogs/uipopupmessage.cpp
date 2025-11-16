@@ -95,7 +95,7 @@ void UIPopupMessage::addButton(const tstring &text, ButtonRole role)
     btn->setObjectGroupId(_T("PopupMsgButton"));
     btn->setText(text);
     m_buttonsLayout->addWidget(btn);
-    btn->onClick([=]() {
+    btn->clickSignal.connect([=]() {
         m_selected = role;
         m_loop->exit();
     });

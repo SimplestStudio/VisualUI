@@ -56,9 +56,7 @@ public:
     UILayout *layout() = delete;
 
     /* callback */
-    int onStateChanged(const FnVoidInt &callback);
-
-    virtual void disconnect(int) override;
+    Signal<int> stateChangedSignal;
 
 protected:    
 #ifdef _WIN32
@@ -96,7 +94,6 @@ private:
 #ifdef _WIN32
     Size     m_size;
 #endif
-    std::unordered_map<int, FnVoidInt> m_state_callbacks;
 };
 
 #endif // WINDOW_H

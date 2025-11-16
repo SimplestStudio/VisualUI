@@ -4,6 +4,7 @@
 #include "uidefines.h"
 #include "uilayoutitem.h"
 #include "uicommon.h"
+#include <vector>
 
 
 class UIWidget;

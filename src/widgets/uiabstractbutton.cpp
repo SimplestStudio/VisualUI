@@ -66,19 +66,6 @@ void UIAbstractButton::adjustSizeBasedOnContent()
     setBaseSize(w, h);
 }
 
-int UIAbstractButton::onClick(const FnVoidVoid &callback)
-{
-    m_click_callbacks[++m_connectionId] = callback;
-    return m_connectionId;
-}
-
-void UIAbstractButton::disconnect(int connectionId)
-{
-    auto it = m_click_callbacks.find(connectionId);
-    if (it != m_click_callbacks.end())
-        m_click_callbacks.erase(it);
-}
-
 #ifdef _WIN32
 bool UIAbstractButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 {
@@ -198,9 +185,6 @@ void UIAbstractButton::click()
     if (underMouse()) {
         if (m_tooltipHandler)
             m_tooltipHandler->skipToolTip();
-        for (auto it = m_click_callbacks.begin(); it != m_click_callbacks.end(); it++) {
-            if (it->second)
-                (it->second)();
-        }        
+        clickSignal.emit();
     }
 }

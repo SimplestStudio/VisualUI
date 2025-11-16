@@ -664,19 +664,6 @@ UIWidget *UIWindow::centralWidget()
     return m_centralWidget;
 }
 
-int UIWindow::onStateChanged(const FnVoidInt &callback)
-{
-    m_state_callbacks[++m_connectionId] = callback;
-    return m_connectionId;
-}
-
-void UIWindow::disconnect(int connectionId)
-{
-    auto it = m_state_callbacks.find(connectionId);
-    if (it != m_state_callbacks.end())
-        m_state_callbacks.erase(it);
-}
-
 #ifdef _WIN32
 bool UIWindow::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 {
@@ -928,9 +915,7 @@ bool UIWindow::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
         case SIZE_RESTORED: {
             if (m_state != (int)wParam) {
                 m_state = (int)wParam;
-                for (auto it = m_state_callbacks.begin(); it != m_state_callbacks.end(); it++)
-                    if (it->second)
-                        (it->second)(m_state);
+                stateChangedSignal.emit(m_state);
 
                 if (m_borderless) {
                     if (m_isMaximized) {
@@ -1055,9 +1040,8 @@ bool UIWindow::event(uint ev_type, void *param)
         if (ev->window_state.changed_mask & (GDK_WINDOW_STATE_ICONIFIED | GDK_WINDOW_STATE_MAXIMIZED | GDK_WINDOW_STATE_FULLSCREEN)) {
             int m_state = (int)ev->window_state.new_window_state & (GDK_WINDOW_STATE_ICONIFIED | GDK_WINDOW_STATE_MAXIMIZED | GDK_WINDOW_STATE_FULLSCREEN);
             m_isMaximized = m_state & GDK_WINDOW_STATE_MAXIMIZED;
-            for (auto it = m_state_callbacks.begin(); it != m_state_callbacks.end(); it++)
-                if (it->second)
-                    (it->second)(m_state);
+
+            stateChangedSignal.emit(m_state);
 
             if (m_borderless)
                 m_resAreaWidth =  m_isMaximized ? 0 : m_is_support_round_corners ? WINDOW_THIN_BORDER_WIDTH : WINDOW_BORDER_WIDTH;
