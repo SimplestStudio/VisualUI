@@ -2,7 +2,6 @@
 #define UIABSTRACTBUTTON_H
 
 #include "uiwidget.h"
-#include <unordered_map>
 
 
 class UIToolTipHandler;
@@ -17,9 +16,8 @@ public:
     tstring text() noexcept;
     void adjustSizeBasedOnContent();
 
-    /* callback */
-    int onClick(const FnVoidVoid &callback);
-    virtual void disconnect(int) override;
+    /* Signals */
+    Signal<> clickSignal;
 
 protected:
 #ifdef _WIN32
@@ -35,7 +33,6 @@ protected:
     bool m_checked;
 
 private:
-    std::unordered_map<int, FnVoidVoid> m_click_callbacks;
 };
 
 #endif // UIABSTRACTBUTTON_H

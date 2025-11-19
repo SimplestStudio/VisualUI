@@ -1,8 +1,10 @@
 #ifndef UITHREAD_H
 #define UITHREAD_H
 
-#include "uiwidget.h"
-#ifdef __linux__
+#include "uidefines.h"
+#ifdef _WIN32
+# include <Windows.h>
+#else
 # include "uiapplication.h"
 #endif
 

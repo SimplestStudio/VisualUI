@@ -14,8 +14,8 @@ UIBoxLayout::UIBoxLayout(Direction direction, int alignment) :
 
 UIBoxLayout::~UIBoxLayout()
 {
-    for (auto it = m_destroy_conn.begin(); it != m_destroy_conn.end(); it++)
-        it->first->disconnect(it->second);
+    // for (auto it = m_destroy_conn.begin(); it != m_destroy_conn.end(); it++)
+    //     it->first->disconnect(it->second);
 
     for (const UILayoutItem &item : m_items) {
         if (item.spr)

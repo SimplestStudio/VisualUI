@@ -87,7 +87,7 @@ void UIToolTipHandler::onToolTipCheck()
         m_tooltip->setObjectGroupId(_T("ToolTip"));
         m_tooltip->setText(m_tooltipText);
         m_tooltip->show();
-        m_tooltip->onClose([=](bool *accept) {
+        m_tooltip->closeSignal.connect([this](bool *accept) {
             *accept = true;
             if (m_checkTimer->isActive())
                 m_checkTimer->stop();

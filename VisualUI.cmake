@@ -27,6 +27,7 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/graphics/uidraghandler.h
     ${UICLASSES}/graphics/uitooltiphandler.h
     ${UICLASSES}/graphics/uipixmap.h
+    ${UICLASSES}/core/uisignal.h
     ${UICLASSES}/core/uiobject.h
     ${UICLASSES}/core/uicursor.h
     ${UICLASSES}/core/uiapplication.h

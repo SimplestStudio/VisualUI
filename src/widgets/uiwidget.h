@@ -5,7 +5,6 @@
 #include "uiplatformtypes.h"
 #include "uicommon.h"
 #include "uidrawingsurface.h"
-#include <unordered_map>
 #ifndef CW_USEDEFAULT
 # define CW_USEDEFAULT 100
 #endif
@@ -59,18 +58,17 @@ public:
     UIWidget* topLevelWidget() const noexcept;
     static UIWidget* widgetFromHwnd(UIWidget *parent, PlatformWindow);
 
-    /* callback */
-    int onResize(const FnVoidIntInt &callback);
-    int onMove(const FnVoidIntInt &callback);
-    int onAboutToDestroy(const FnVoidVoid &callback);
-    int onCreate(const FnVoidVoid &callback);
-    int onActivationChanged(const FnVoidBool &callback);
-    int onClose(const FnVoidBoolPtr &callback);
-    int onDropFiles(const FnVoidVecStr &callback);
-    int onContextMenu(const FnVoidIntInt &callback);
+    /* Signals */
+    Signal<> createdSignal;
+    Signal<> aboutToDestroySignal;
+    Signal<bool> activationChangedSignal;
+    Signal<bool*> closeSignal;
+    Signal<int,int> resizeSignal;
+    Signal<int,int> moveSignal;
+    Signal<int,int> contextMenuSignal;
+    Signal<const std::vector<tstring>&> dropFilesSignal;
 
     virtual void onInvokeMethod(long long wParam);
-    virtual void disconnect(int) override;
 
 protected:
     friend class UIApplication;
@@ -111,14 +109,6 @@ private:
     void setPlatformWindow(PlatformWindow);
 
     int m_size_behaviors[SizePolicy::PROPERTIES_LAST];
-    std::unordered_map<int, FnVoidBool>   m_activation_callbacks;
-    std::unordered_map<int, FnVoidIntInt> m_resize_callbacks,
-                                          m_move_callbacks,
-                                          m_context_callbacks;
-    std::unordered_map<int, FnVoidVoid>   m_create_callbacks,
-                                          m_destroy_callbacks;
-    std::unordered_map<int, FnVoidBoolPtr> m_close_callbacks;
-    std::unordered_map<int, FnVoidVecStr>  m_drop_callbacks;
 
     Size    m_base_size;
     tstring m_font;

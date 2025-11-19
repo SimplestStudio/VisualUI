@@ -2,7 +2,6 @@
 #define UIDEFINES_H
 
 #include <functional>
-#include <vector>
 #include <string>
 
 #if defined(_WIN32)
@@ -67,10 +66,4 @@
 #endif
 
 typedef std::function<void(void)>     FnVoidVoid;
-typedef std::function<void(bool)>     FnVoidBool;
-typedef std::function<void(bool*)>    FnVoidBoolPtr;
-typedef std::function<void(int)>      FnVoidInt;
-typedef std::function<void(int,int)>  FnVoidIntInt;
-typedef std::function<void(std::vector<tstring>)>  FnVoidVecStr;
-
 #endif // UIDEFINES_H
