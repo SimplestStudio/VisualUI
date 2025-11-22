@@ -4,6 +4,7 @@
 #include "uiwidget.h"
 #include "uipalette.h"
 #include "uimetrics.h"
+#include <unordered_map>
 #include <list>
 #include <algorithm>
 #include <cctype>

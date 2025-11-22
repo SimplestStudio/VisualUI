@@ -83,15 +83,10 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
     btn1->setObjectGroupId(_T("HeaderCloseButton"));
     btn1->setStockIcon(UIButton::CloseIcon);
     btn1->setIconSize(10, 10);
-    btn1->onClick([=]() {
+    btn1->clickSignal.connect([=]() {
         printf("onClose... 1\n");
         fflush(stdout);
         close();
-    });
-    btn1->onActivationChanged([btn1](bool active) {
-        UIStyle *style = UIApplication::instance()->style();
-        btn1->SetColor(Palette::Primitive, Palette::Normal, style->themeColor(active ? _T("TEXT_NORMAL") : _T("TEXT_DISABLED")));
-        btn1->update();
     });
 
     UIButton *btn2 = new UIButton(caption);
@@ -99,7 +94,7 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
     btn2->setStockIcon(UIButton::RestoreIcon);
     btn2->setIconSize(10, 10);
     btn2->setSupportSnapLayouts();
-    btn2->onClick([=]() {
+    btn2->clickSignal.connect([=]() {
         printf("onMaximized... 1\n");
         fflush(stdout);
         if (isMaximized()) {
@@ -108,24 +103,24 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
             showMaximized();
         }
     });
-    btn2->onActivationChanged([btn2](bool active) {
-        UIStyle *style = UIApplication::instance()->style();
-        btn2->SetColor(Palette::Primitive, Palette::Normal, style->themeColor(active ? _T("TEXT_NORMAL") : _T("TEXT_DISABLED")));
-        btn2->update();
-    });
 
     UIButton *btn3 = new UIButton(caption);
     btn3->setObjectGroupId(_T("HeaderButton"));
     btn3->setStockIcon(UIButton::MinimizeIcon);
     btn3->setIconSize(10, 10);
-    btn3->onClick([=]() {
+
+    btn3->clickSignal.connect([=]() {
         printf("onMinimized... 1\n");
         fflush(stdout);
         showMinimized();
     });
-    btn3->onActivationChanged([btn3](bool active) {
-        UIStyle *style = UIApplication::instance()->style();
+    btn1->activationChangedSignal.connect([btn1, btn2, btn3](bool active) {
+        UIStyle *style = UIApplication::instance()->style();        
+        btn1->SetColor(Palette::Primitive, Palette::Normal, style->themeColor(active ? _T("TEXT_NORMAL") : _T("TEXT_DISABLED")));
+        btn2->SetColor(Palette::Primitive, Palette::Normal, style->themeColor(active ? _T("TEXT_NORMAL") : _T("TEXT_DISABLED")));
         btn3->SetColor(Palette::Primitive, Palette::Normal, style->themeColor(active ? _T("TEXT_NORMAL") : _T("TEXT_DISABLED")));
+        btn1->update();
+        btn2->update();
         btn3->update();
     });
 
@@ -170,7 +165,7 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
     btn5->setObjectGroupId(_T("ToolButton"));
     btn5->setVectorIcon(IDI_SAVEFILE, 16, 16);
     btn5->setToolTip(_T("Save file"));
-    btn5->onClick([=]() {
+    btn5->clickSignal.connect([=]() {
         Point wndPos = pos();
         Size wndSize = size();
         int w = 336 * dpiRatio();
@@ -204,7 +199,7 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
     btn7->setObjectGroupId(_T("ToolButton"));
     btn7->setVectorIcon(IDI_ABOUTEMF, 16, 16);
     btn7->setToolTip(_T("About"));
-    btn7->onClick([=]() {
+    btn7->clickSignal.connect([=]() {
 
     });
     lvlut->addWidget(btn7);
@@ -246,12 +241,12 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
     viewPanel->setAcceptDrops(true);
     cvlut->addWidget(viewPanel);
 
-    viewPanel->onContextMenu([this](int x, int y) {
+    viewPanel->contextMenuSignal.connect([this](int x, int y) {
         int width = 149 * dpiRatio(), height = 245 * dpiRatio();
         UIMenu *menu = new UIMenu(this, Rect(x, y, width, height));
         menu->setObjectGroupId(_T("ToolTip"));
         UIButton *b1 = menu->addSection(_T("Close"));
-        b1->onClick([menu]() {
+        b1->clickSignal.connect([menu]() {
             menu->close();
         });
         menu->addSection(_T("Close Saved"));
@@ -260,11 +255,11 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
         UIButton *b2 = menu->addSection(_T("Reopen With..."));
         menu->addSeparator();
         UIButton *b3 = menu->addSection(_T("Split Up"));
-        b3->onClick([b2]() {
+        b3->clickSignal.connect([b2]() {
             b2->setDisabled(true);
         });
         UIButton *b4 = menu->addSection(_T("Split Down"));
-        b4->onClick([b2]() {
+        b4->clickSignal.connect([b2]() {
             b2->setDisabled(false);
         });
         menu->addSection(_T("Copy to Window"));
@@ -273,7 +268,7 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
         menu->showAll();
     });
 
-    btn6->onClick([this, btn4, btn5, btn6, btn7, le]() {
+    btn6->clickSignal.connect([this, btn4, btn5, btn6, btn7, le]() {
         Point wndPos = pos();
         Size wndSize = size();
         int w = 336 * dpiRatio();
@@ -294,7 +289,7 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
         tbt->setText(_T("Switch theme"));
         tbt->setChecked(m_toggleChecked);
         hlut->addWidget(tbt);
-        tbt->onClick([this, tbt, btn4, btn5, btn6, btn7, le]() {
+        tbt->clickSignal.connect([this, tbt, btn4, btn5, btn6, btn7, le]() {
             m_toggleChecked = tbt->isChecked();
             UIStyle *style = UIApplication::instance()->style();
             style->setTheme(m_toggleChecked ? _T("Light") : _T("Dark"));
@@ -315,9 +310,7 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
 
         UIButton *apply = new UIButton(dlg, _T("Apply"));
         apply->setObjectGroupId(_T("PushButton"));
-        apply->onClick([=]() {
-            dlg->accept();
-        });
+        connect(apply->clickSignal, dlg, &UIDialog::accept);
         hlut->addWidget(apply);
 
         int res = dlg->runDialog();
@@ -339,13 +332,13 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
         }
     };
 
-    viewPanel->onDropFiles([setViewText](std::vector<tstring> paths) {
+    viewPanel->dropFilesSignal.connect([setViewText](const std::vector<tstring> &paths) {
         if (!paths.empty()) {
             setViewText(paths[0]);
         }
     });
 
-    btn4->onClick([this, setViewText]() {
+    btn4->clickSignal.connect([this, setViewText]() {
         UIFileDialog *dlg = new UIFileDialog(this);
         dlg->setTitle(_T("Open"));
         dlg->setMode(UIFileDialog::Mode::OpenFile);
@@ -390,7 +383,7 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
     roundCorners(false);
 #endif
 
-    onStateChanged([=](int state) {
+    stateChangedSignal.connect([=](int state){
         if (state == UIWindow::Normal) {
             btn2->setStockIcon(UIButton::RestoreIcon);
 #ifdef __linux

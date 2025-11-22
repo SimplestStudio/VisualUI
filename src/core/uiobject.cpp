@@ -1,8 +1,6 @@
 #include "uiobject.h"
 
 
-int UIObject::m_connectionId = 0;
-
 UIObject::UIObject(ObjectType type, UIObject *parent) :
     m_parent(parent),
     m_objectType(type),
@@ -49,9 +47,4 @@ tstring UIObject::objectName() const noexcept
 tstring UIObject::objectGroupId() const noexcept
 {
     return m_groupId;
-}
-
-void UIObject::disconnect(int connectionId)
-{
-
 }

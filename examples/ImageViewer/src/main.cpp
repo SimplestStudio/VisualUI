@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     MainWindow w(rc, UIWindow::RemoveSystemDecoration);
     w.setWindowTitle(_T("Image Viewer"));
     w.setIcon(IDI_MAINICON);
-    w.onAboutToDestroy([&app]() {
+    w.aboutToDestroySignal.connect([&app]() {
         app.exit(0);
     });
     w.showAll();

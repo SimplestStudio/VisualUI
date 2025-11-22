@@ -139,9 +139,8 @@ void UIWidget::setGeometry(int x, int y, int width, int height)
     }
     if (m_layout)
         m_layout->onResize(width, height);
-    for (auto it = m_resize_callbacks.begin(); it != m_resize_callbacks.end(); it++)
-        if (it->second)
-            (it->second)(width, height);
+
+    resizeSignal.emit(width, height);
 #endif
 }
 
@@ -196,9 +195,8 @@ void UIWidget::resize(int w, int h)
         gtk_widget_set_size_request(m_hWindow, w, h);
     if (m_layout)
         m_layout->onResize(w, h);
-    for (auto it = m_resize_callbacks.begin(); it != m_resize_callbacks.end(); it++)
-        if (it->second)
-            (it->second)(w, h);
+
+    resizeSignal.emit(w, h);
 #endif
 }
 
@@ -490,120 +488,12 @@ UIWidget *UIWidget::widgetFromHwnd(UIWidget *parent, PlatformWindow hwnd)
     return new UIWidget(parent, ObjectType::WidgetType, hwnd);
 }
 
-int UIWidget::onResize(const FnVoidIntInt &callback)
-{
-    m_resize_callbacks[++m_connectionId] = callback;
-    return m_connectionId;
-}
-
-int UIWidget::onMove(const FnVoidIntInt &callback)
-{
-    m_move_callbacks[++m_connectionId] = callback;
-    return m_connectionId;
-}
-
-int UIWidget::onAboutToDestroy(const FnVoidVoid &callback)
-{
-    m_destroy_callbacks[++m_connectionId] = callback;
-    return m_connectionId;
-}
-
-int UIWidget::onCreate(const FnVoidVoid &callback)
-{
-    m_create_callbacks[++m_connectionId] = callback;
-    return m_connectionId;
-}
-
-int UIWidget::onActivationChanged(const FnVoidBool &callback)
-{
-    m_activation_callbacks[++m_connectionId] = callback;
-    return m_connectionId;
-}
-
-int UIWidget::onClose(const FnVoidBoolPtr &callback)
-{
-    m_close_callbacks[++m_connectionId] = callback;
-    return m_connectionId;
-}
-
-int UIWidget::onDropFiles(const FnVoidVecStr &callback)
-{
-    m_drop_callbacks[++m_connectionId] = callback;
-    return m_connectionId;
-}
-
-int UIWidget::onContextMenu(const FnVoidIntInt &callback)
-{
-    m_context_callbacks[++m_connectionId] = callback;
-    return m_connectionId;
-}
-
 void UIWidget::onInvokeMethod(long long wParam)
 {
     if (std::function<void()> *func = (std::function<void()>*)wParam) {
         if (*func)
             (*func)();
         delete func;
-    }
-}
-
-void UIWidget::disconnect(int connectionId)
-{
-    {
-        auto it = m_resize_callbacks.find(connectionId);
-        if (it != m_resize_callbacks.end()) {
-            m_resize_callbacks.erase(it);
-            return;
-        }
-    }
-    {
-        auto it = m_move_callbacks.find(connectionId);
-        if (it != m_move_callbacks.end()) {
-            m_move_callbacks.erase(it);
-            return;
-        }
-    }
-    {
-        auto it = m_destroy_callbacks.find(connectionId);
-        if (it != m_destroy_callbacks.end()) {
-            m_destroy_callbacks.erase(it);
-            return;
-        }
-    }
-    {
-        auto it = m_create_callbacks.find(connectionId);
-        if (it != m_create_callbacks.end()) {
-            m_create_callbacks.erase(it);
-            return;
-        }
-    }
-    {
-        auto it = m_activation_callbacks.find(connectionId);
-        if (it != m_activation_callbacks.end()) {
-            m_activation_callbacks.erase(it);
-            return;
-        }
-    }
-    {
-        auto it = m_close_callbacks.find(connectionId);
-        if (it != m_close_callbacks.end()) {
-            m_close_callbacks.erase(it);
-            return;
-        }
-    }
-    {
-        auto it = m_drop_callbacks.find(connectionId);
-        if (it != m_drop_callbacks.end()) {
-            m_drop_callbacks.erase(it);
-            return;
-        }
-    }
-    {
-        auto it = m_context_callbacks.find(connectionId);
-        if (it != m_context_callbacks.end()) {
-            m_context_callbacks.erase(it);
-            return;
-        }
     }
 }
 
@@ -619,24 +509,18 @@ bool UIWidget::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
             onAfterCreated();
         });
         m_is_created = true;
-        for (auto it = m_create_callbacks.begin(); it != m_create_callbacks.end(); it++)
-            if (it->second)
-                (it->second)();
+        createdSignal.emit();
         break;
     }
 
     case WM_SIZE:
         if (m_layout)
             m_layout->onResize(LOWORD(lParam), HIWORD(lParam), m_dpi_ratio);
-        for (auto it = m_resize_callbacks.begin(); it != m_resize_callbacks.end(); it++)
-            if (it->second)
-                (it->second)(LOWORD(lParam), HIWORD(lParam));
+        resizeSignal.emit(LOWORD(lParam), HIWORD(lParam));
         break;
 
     case WM_MOVE:
-        for (auto it = m_move_callbacks.begin(); it != m_move_callbacks.end(); it++)
-            if (it->second)
-                (it->second)(LOWORD(lParam), HIWORD(lParam));
+        moveSignal.emit(LOWORD(lParam), HIWORD(lParam));
         break;
 
     case WM_PAINT_LAYERED_CHILD:
@@ -700,10 +584,7 @@ bool UIWidget::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
     case WM_RBUTTONUP: {
         POINT pos{GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
         ClientToScreen(m_hWindow, &pos);
-        for (auto it = m_context_callbacks.begin(); it != m_context_callbacks.end(); it++) {
-            if (it->second)
-                (it->second)(pos.x, pos.y);
-        }
+        contextMenuSignal.emit(pos.x, pos.y);
         break;
     }
 
@@ -775,18 +656,14 @@ bool UIWidget::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
             }
         }
         DragFinish(hDrop);
-        for (auto it = m_drop_callbacks.begin(); it != m_drop_callbacks.end(); it++)
-            if (it->second)
-                (it->second)(paths);
+        dropFilesSignal.emit(paths);
         *result = FALSE;
         return true;
     }
 
     case WM_CLOSE: {
         bool accept = true;
-        for (auto it = m_close_callbacks.begin(); it != m_close_callbacks.end(); it++)
-            if (it->second)
-                (it->second)(&accept);
+        closeSignal.emit(&accept);
         if (accept)
             DestroyWindow(m_hWindow);
         *result = TRUE;
@@ -795,9 +672,7 @@ bool UIWidget::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 
     case WM_DESTROY: {
         m_is_destroyed = true;
-        for (auto it = m_destroy_callbacks.begin(); it != m_destroy_callbacks.end(); it++)
-            if (it->second)
-                (it->second)();
+        aboutToDestroySignal.emit();
 
         SetWindowLongPtr(m_hWindow, GWLP_USERDATA, 0);
         if (!m_is_class_destroyed) {
@@ -810,9 +685,7 @@ bool UIWidget::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 
     case WM_PARENT_ACTIVATION_NOTIFY: {
         m_is_active = LOWORD(wParam);
-        for (auto it = m_activation_callbacks.begin(); it != m_activation_callbacks.end(); it++)
-            if (it->second)
-                (it->second)(m_is_active);
+        activationChangedSignal.emit(m_is_active);
         break;
     }
 
@@ -838,10 +711,8 @@ bool UIWidget::event(uint ev_type, void *param)
 {
     switch (ev_type) {
     case GDK_HOOKED_REALIZE: {
-        m_is_created = true;
-        for (auto it = m_create_callbacks.begin(); it != m_create_callbacks.end(); it++)
-            if (it->second)
-                (it->second)();
+        m_is_created = true;        
+        createdSignal.emit();
         return false;
     }
 
@@ -849,9 +720,7 @@ bool UIWidget::event(uint ev_type, void *param)
         GdkEventConfigure *cev = (GdkEventConfigure*)param;
         if (cev->x != m_pos.x || cev->y != m_pos.y) {
             m_pos = Point(cev->x, cev->y);
-            for (auto it = m_move_callbacks.begin(); it != m_move_callbacks.end(); it++)
-                if (it->second)
-                    (it->second)(cev->x, cev->y);
+            moveSignal.emit(cev->x, cev->y);
         }
         return false;
     }
@@ -893,10 +762,7 @@ bool UIWidget::event(uint ev_type, void *param)
             }
         } else
         if (bev->button == GDK_BUTTON_SECONDARY) {
-            for (auto it = m_context_callbacks.begin(); it != m_context_callbacks.end(); it++) {
-                if (it->second)
-                    (it->second)(bev->x_root, bev->y_root);
-            }
+            contextMenuSignal.emit(bev->x_root, bev->y_root);
         }
         return true;
     }
@@ -937,34 +803,26 @@ bool UIWidget::event(uint ev_type, void *param)
             g_strfreev(uris);
         }
         gtk_drag_finish(dfi->context, TRUE, FALSE, dfi->time);
-        for (auto it = m_drop_callbacks.begin(); it != m_drop_callbacks.end(); it++)
-            if (it->second)
-                (it->second)(paths);
+        dropFilesSignal.emit(paths);
         return false;
     }
 
     case GDK_HOOKED_SIZE_ALLOC: {
         GtkAllocation *alc = (GtkAllocation*)param;
         m_size = Size(alc->width, alc->height);
-        for (auto it = m_resize_callbacks.begin(); it != m_resize_callbacks.end(); it++)
-            if (it->second)
-                (it->second)(alc->width, alc->height);
+        resizeSignal.emit(alc->width, alc->height);
         break;
     }
 
     case GDK_DELETE: {
         bool accept = true;
-        for (auto it = m_close_callbacks.begin(); it != m_close_callbacks.end(); it++)
-            if (it->second)
-                (it->second)(&accept);
+        closeSignal.emit(&accept);
         return !accept;
     }
 
     case GDK_HOOKED_DESTROY: {
         m_is_destroyed = true;
-        for (auto it = m_destroy_callbacks.begin(); it != m_destroy_callbacks.end(); it++)
-            if (it->second)
-                (it->second)();
+        aboutToDestroySignal.emit();
 
         g_object_set_data(G_OBJECT(m_hWindow), "UIWidget", NULL);
         if (!m_is_class_destroyed) {
@@ -978,9 +836,7 @@ bool UIWidget::event(uint ev_type, void *param)
     case GDK_PARENT_ACTIVATION_NOTIFY: {
         bool *is_active = (bool*)param;
         m_is_active = *is_active;
-        for (auto it = m_activation_callbacks.begin(); it != m_activation_callbacks.end(); it++)
-            if (it->second)
-                (it->second)(m_is_active);
+        activationChangedSignal.emit(m_is_active);
         break;
     }
 
