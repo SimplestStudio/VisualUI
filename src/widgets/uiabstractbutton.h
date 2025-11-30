@@ -14,6 +14,7 @@ public:
     virtual void setText(const tstring &text) noexcept;
     void setToolTip(const tstring &text) noexcept;
     tstring text() noexcept;
+    void restrictClickArea(bool restrict) noexcept;
     void adjustSizeBasedOnContent();
 
     /* Signals */
@@ -30,7 +31,8 @@ protected:
     tstring  m_text;
     RECT m_check_rc;
     UIToolTipHandler *m_tooltipHandler;
-    bool m_checked;
+    bool m_checked,
+         m_restrictedClickArea;
 
 private:
 };
