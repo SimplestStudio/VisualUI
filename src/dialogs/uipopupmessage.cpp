@@ -58,13 +58,13 @@ UIPopupMessage::UIPopupMessage(UIWidget *parent, const Rect &rc) :
 
     m_labelCaption = new UILabel(top);
     m_labelCaption->setObjectGroupId(_T("PopupMsgLabel"));
-    m_labelCaption->setFont(_T("Arial"), 14);
+    m_labelCaption->setFont({DEFAULT_FONT_NAME, 14});
     m_labelCaption->metrics()->setMetrics(Metrics::TextAlignment, Metrics::AlignHLeft | Metrics::AlignVCenter);
     labelsLayout->addWidget(m_labelCaption);
 
     m_labelDescription = new UILabel(top);
     m_labelDescription->setObjectGroupId(_T("PopupMsgLabel"));
-    m_labelDescription->setFont(_T("Arial"), 9.5);
+    m_labelDescription->setFont({DEFAULT_FONT_NAME, 9.5});
     m_labelDescription->metrics()->setMetrics(Metrics::TextAlignment, Metrics::AlignHLeft | Metrics::AlignVCenter);
     labelsLayout->addWidget(m_labelDescription);
 

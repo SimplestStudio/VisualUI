@@ -36,7 +36,7 @@ public:
     void setDragHandler(UIDragHandler*);
     void applyStyle();
     void setSizePolicy(SizePolicy::Properties, int);
-    void setFont(const tstring &font, double fontPointSize = 10);
+    void setFont(const FontInfo &fontInfo);
     void setBaseSize(int w, int h);
     void setCorners(unsigned char corner);
     void setAcceptDrops(bool);
@@ -54,6 +54,7 @@ public:
     void ungrabMouse();
     int  sizePolicy(SizePolicy::Properties);
     double dpiRatio();
+    FontInfo font() const;
     UILayout* layout() const noexcept;
     PlatformWindow platformWindow() const noexcept;
     UIWidget* topLevelWidget() const noexcept;
@@ -115,10 +116,9 @@ private:
     int m_size_behaviors[SizePolicy::PROPERTIES_LAST];
 
     Size    m_base_size;
-    tstring m_font;
+    FontInfo m_fontInfo;
     UIDragHandler *m_drag_handler;
     UIGeometryAnimation *m_geometry_animation;
-    double m_font_size;
     bool   m_is_created,
            m_is_active,
            m_is_destroyed,

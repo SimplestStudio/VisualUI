@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
         g_resource_unref(res);
     }
 #endif
-    app.setFont(_T("Arial"), 9.5);
+    app.setFont({DEFAULT_FONT_NAME, 9.5});
     app.style()->setDefaultTheme(_T("Dark"));
 
     double screenDpi = 1.0;
