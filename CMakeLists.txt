@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(VisualUI STATIC)
 
-target_compile_definitions(VisualUI PRIVATE VISUALUI_LIBRARY)
+target_compile_definitions(VisualUI PRIVATE VISUALUI_STATIC)
 include(${CMAKE_CURRENT_SOURCE_DIR}/VisualUI.cmake)
 
 set(OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/build)
