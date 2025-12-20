@@ -46,8 +46,9 @@ public:
     void update();
     void bringAboveSiblings();
     void setLayout(UILayout *lut);
-    bool isCreated();
-    bool isActive();
+    bool isCreated() const noexcept;
+    bool isActive() const noexcept;
+    bool isVisible() const noexcept;
     bool underMouse();
     void grabMouse();
     void ungrabMouse();
@@ -57,6 +58,9 @@ public:
     PlatformWindow platformWindow() const noexcept;
     UIWidget* topLevelWidget() const noexcept;
     static UIWidget* widgetFromHwnd(UIWidget *parent, PlatformWindow);
+#ifdef _WIN32
+    void enableClipSiblings() const;
+#endif
 
     /* Signals */
     Signal<> createdSignal;

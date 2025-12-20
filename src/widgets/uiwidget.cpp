@@ -401,14 +401,23 @@ void UIWidget::setLayout(UILayout *layout)
     }
 }
 
-bool UIWidget::isCreated()
+bool UIWidget::isCreated() const noexcept
 {
     return m_is_created;
 }
 
-bool UIWidget::isActive()
+bool UIWidget::isActive() const noexcept
 {
     return m_is_active;
+}
+
+bool UIWidget::isVisible() const noexcept
+{
+#ifdef _WIN32
+    return IsWindowVisible(m_hWindow);
+#else
+    return gtk_widget_is_visible(m_hWindow);
+#endif
 }
 
 bool UIWidget::underMouse()
@@ -487,6 +496,14 @@ UIWidget *UIWidget::widgetFromHwnd(UIWidget *parent, PlatformWindow hwnd)
 {
     return new UIWidget(parent, ObjectType::WidgetType, hwnd);
 }
+
+#ifdef _WIN32
+void UIWidget::enableClipSiblings() const
+{
+    DWORD style = GetWindowLong(m_hWindow, GWL_STYLE);
+    SetWindowLong(m_hWindow, GWL_STYLE, style | WS_CLIPSIBLINGS);
+}
+#endif
 
 void UIWidget::onInvokeMethod(long long wParam)
 {
