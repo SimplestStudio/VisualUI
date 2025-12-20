@@ -98,7 +98,7 @@ UIWidget::~UIWidget()
     UIApplication::instance()->style()->unregisterWidget(this);
     m_is_class_destroyed = true;
     if (m_layout) {
-        if (UIUtils::isAllocOnHeap(m_layout))
+        if (!UIMemory::isOnStack(m_layout))
             delete m_layout;
         m_layout = nullptr;
     }
@@ -676,7 +676,7 @@ bool UIWidget::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 
         SetWindowLongPtr(m_hWindow, GWLP_USERDATA, 0);
         if (!m_is_class_destroyed) {
-            if (UIUtils::isAllocOnHeap(this)) {
+            if (!UIMemory::isOnStack(this)) {
                 delete this;
             }
         }
@@ -826,7 +826,7 @@ bool UIWidget::event(uint ev_type, void *param)
 
         g_object_set_data(G_OBJECT(m_hWindow), "UIWidget", NULL);
         if (!m_is_class_destroyed) {
-            if (UIUtils::isAllocOnHeap(this)) {
+            if (!UIMemory::isOnStack(this)) {
                 delete this;
             }
         }

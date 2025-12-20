@@ -33,9 +33,14 @@ namespace UIUtils
     WindowServer DECL_VISUALUI windowServer();
     void DECL_VISUALUI loadStringResource(tstring &str, GResource *res, const char *resourcePath);
 #endif
-    // Checks whether `addr` points to a block allocated on the process heap.
+
+};
+
+namespace UIMemory
+{
+    // Checks whether `addr` points to a block on the process stack.
     // Used before freeing memory to avoid accessing invalid or foreign memory regions.
-    bool isAllocOnHeap(void *addr);
+    bool isOnStack(void *addr);
 };
 
 namespace UIScreen
