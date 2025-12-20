@@ -26,6 +26,7 @@ public:
 
     virtual void addWidget(UIWidget *wgt) = 0;
     virtual void addSpacer(UISpacer *spr) = 0;
+    virtual void removeWidget(UIWidget *wgt, UIWidget *parent) = 0;
 
 protected:
     std::vector<UILayoutItem> m_items;
