@@ -38,6 +38,12 @@ void UIAbstractButton::setText(const tstring &text) noexcept
     update();
 }
 
+void UIAbstractButton::setChecked(bool checked)
+{
+    m_checked = checked;
+    update();
+}
+
 void UIAbstractButton::setToolTip(const tstring &text) noexcept
 {
     if (!m_tooltipHandler)
@@ -48,6 +54,11 @@ void UIAbstractButton::setToolTip(const tstring &text) noexcept
 tstring UIAbstractButton::text() noexcept
 {
     return m_text;
+}
+
+bool UIAbstractButton::isChecked() noexcept
+{
+    return m_checked;
 }
 
 void UIAbstractButton::restrictClickArea(bool restrict) noexcept

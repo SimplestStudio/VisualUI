@@ -10,9 +10,6 @@ public:
     explicit UIRadioButton(UIWidget *parent = nullptr, const tstring &text = {});
     ~UIRadioButton();
 
-    void setChecked(bool checked);
-    bool isChecked();
-
     /* callback */
 
 protected:

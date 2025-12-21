@@ -10,9 +10,6 @@ public:
     explicit UICheckBox(UIWidget *parent = nullptr, const tstring &text = {});
     ~UICheckBox();
 
-    void setChecked(bool checked);
-    bool isChecked();
-
     /* callback */
 
 protected:

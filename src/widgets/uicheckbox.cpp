@@ -17,17 +17,6 @@ UICheckBox::~UICheckBox()
 
 }
 
-void UICheckBox::setChecked(bool checked)
-{
-    m_checked = checked;
-    update();
-}
-
-bool UICheckBox::isChecked()
-{
-    return m_checked;
-}
-
 #ifdef _WIN32
 bool UICheckBox::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 {

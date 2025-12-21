@@ -17,17 +17,6 @@ UIRadioButton::~UIRadioButton()
 
 }
 
-void UIRadioButton::setChecked(bool checked)
-{
-    m_checked = checked;
-    update();
-}
-
-bool UIRadioButton::isChecked()
-{
-    return m_checked;
-}
-
 #ifdef _WIN32
 bool UIRadioButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 {

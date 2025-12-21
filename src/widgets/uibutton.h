@@ -21,6 +21,8 @@ public:
 
     void setSupportSnapLayouts();
     void setStockIcon(StockIcon stockIcon);
+    void setChecked(bool checked) = delete;
+    bool isChecked() noexcept = delete;
 
 protected:
 #ifdef _WIN32

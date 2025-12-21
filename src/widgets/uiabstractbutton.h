@@ -12,8 +12,10 @@ public:
     virtual ~UIAbstractButton();
 
     virtual void setText(const tstring &text) noexcept;
+    void setChecked(bool checked);
     void setToolTip(const tstring &text) noexcept;
     tstring text() noexcept;
+    bool isChecked() noexcept;
     void restrictClickArea(bool restrict) noexcept;
     void adjustSizeBasedOnContent();
 
