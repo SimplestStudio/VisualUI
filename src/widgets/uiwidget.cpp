@@ -40,7 +40,11 @@ UIWidget::UIWidget(UIWidget *parent) :
 UIWidget::UIWidget(UIWidget *parent, ObjectType type, PlatformWindow hWindow, const Rect &rc) :
     UIObject(type, parent),
     UIDrawningSurface(),
+#ifdef _WIN32
+    m_hFont(nullptr),
+#else
     m_hFont(new FontDescription),
+#endif
     m_hWindow(hWindow),
 #ifdef _WIN32
     m_root_hWnd(nullptr),
