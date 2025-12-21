@@ -40,7 +40,7 @@ UIWidget::UIWidget(UIWidget *parent) :
 UIWidget::UIWidget(UIWidget *parent, ObjectType type, PlatformWindow hWindow, const Rect &rc) :
     UIObject(type, parent),
     UIDrawningSurface(),
-    m_hFont(nullptr),
+    m_hFont(new FontDescription),
     m_hWindow(hWindow),
 #ifdef _WIN32
     m_root_hWnd(nullptr),
@@ -109,8 +109,9 @@ UIWidget::~UIWidget()
 #else
     if (!m_is_destroyed)
         gtk_widget_destroy(m_hWindow);
-    if (m_hFont)
-        pango_font_description_free(m_hFont);
+    if (m_hFont->desc)
+        pango_font_description_free(m_hFont->desc);
+    delete m_hFont;
 #endif
 }
 
@@ -310,11 +311,13 @@ void UIWidget::setFont(const FontInfo &fontInfo)
     m_hFont = CreateFontA(h, 0, 0, 0, weight, m_fontInfo.italic, m_fontInfo.underline, m_fontInfo.strikeOut,
                           DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, m_fontInfo.name.c_str());
 #else
-    if (m_hFont) {
-        pango_font_description_free(m_hFont);
-        m_hFont = nullptr;
+    if (m_hFont->desc) {
+        pango_font_description_free(m_hFont->desc);
+        m_hFont->desc = nullptr;
     }
-    m_hFont = pango_font_description_new();
+    m_hFont->desc = pango_font_description_new();
+    m_hFont->underline = false;
+    m_hFont->strikeOut = false;
 
     int wt = m_fontInfo.weight;
     PangoWeight weight =
@@ -330,15 +333,13 @@ void UIWidget::setFont(const FontInfo &fontInfo)
         (wt <= 800) ? PANGO_WEIGHT_ULTRABOLD :
         (wt <= 900) ? PANGO_WEIGHT_HEAVY : PANGO_WEIGHT_ULTRAHEAVY;
 
-    pango_font_description_set_family(m_hFont, m_fontInfo.name.c_str());
-    pango_font_description_set_size(m_hFont, m_fontInfo.pointSize * PANGO_SCALE);
-    pango_font_description_set_weight(m_hFont, weight);
+    pango_font_description_set_family(m_hFont->desc, m_fontInfo.name.c_str());
+    pango_font_description_set_size(m_hFont->desc, m_fontInfo.pointSize * PANGO_SCALE);
+    pango_font_description_set_weight(m_hFont->desc, weight);
     if (m_fontInfo.italic)
-        pango_font_description_set_style(m_hFont, PANGO_STYLE_ITALIC);
-    std::string vrt;
-    if (m_fontInfo.underline) vrt += "u";
-    if (m_fontInfo.strikeOut) vrt += "s";
-    pango_font_description_set_variations(m_hFont, !vrt.empty() ? vrt.c_str() : nullptr);
+        pango_font_description_set_style(m_hFont->desc, PANGO_STYLE_ITALIC);
+    if (m_fontInfo.underline) m_hFont->underline = true;
+    if (m_fontInfo.strikeOut) m_hFont->strikeOut = true;
 #endif
 }
 

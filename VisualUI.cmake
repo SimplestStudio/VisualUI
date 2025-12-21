@@ -132,6 +132,7 @@ if (WIN32)
 
 elseif (UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
+    find_package(Threads REQUIRED)
     pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
     pkg_check_modules(LIBXML2 REQUIRED libxml-2.0)
     pkg_check_modules(GIO REQUIRED gio-2.0)
@@ -150,5 +151,6 @@ elseif (UNIX AND NOT APPLE)
         ${LIBXML2_LIBRARIES}
         ${GIO_LIBRARIES}
         ${RSVG_LIBRARIES}
+        Threads::Threads
     )
 endif()

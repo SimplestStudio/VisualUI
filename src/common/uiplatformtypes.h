@@ -13,7 +13,9 @@
   typedef uint32_t DWORD;
   typedef DWORD COLORREF;
   typedef GtkWidget* PlatformWindow;
-  typedef PangoFontDescription* PlatformFont;
+
+  struct FontDescription;
+  typedef FontDescription* PlatformFont;
 #endif
 
 #endif // UIPLATFORMTYPES_H

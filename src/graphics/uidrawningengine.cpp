@@ -787,19 +787,18 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
     cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
     PangoLayout *lut = pango_cairo_create_layout(m_cr);
     pango_layout_set_text(lut, text.c_str(), -1);
-    pango_layout_set_font_description(lut, hFont);
+    pango_layout_set_font_description(lut, hFont->desc);
     pango_layout_set_wrap(lut, PANGO_WRAP_WORD);
     pango_layout_set_width(lut, multiline ? _rc.width * PANGO_SCALE : -1);
     pango_layout_set_height(lut, _rc.height * PANGO_SCALE);
 
-    const char *vrt = pango_font_description_get_variations(hFont);
-    if (vrt) {
+    if (hFont->underline || hFont->strikeOut) {
         PangoAttrList* attrs = pango_attr_list_new();
-        if (strchr(vrt, 'u')) {
+        if (hFont->underline) {
             PangoAttribute* underline = pango_attr_underline_new(PANGO_UNDERLINE_SINGLE);
             pango_attr_list_insert(attrs, underline);
         }
-        if (strchr(vrt, 's')) {
+        if (hFont->strikeOut) {
             PangoAttribute* strike = pango_attr_strikethrough_new(TRUE);
             pango_attr_list_insert(attrs, strike);
         }

@@ -454,7 +454,7 @@ void UILineEdit::textBounds(const tstring &text, Rect &rc)
     ReleaseDC(m_hWindow, hdc);
 #else
     PangoLayout *lut = gtk_widget_create_pango_layout(m_hWindow, text.c_str());
-    pango_layout_set_font_description(lut, m_hFont);
+    pango_layout_set_font_description(lut, m_hFont->desc);
     pango_layout_set_wrap(lut, PANGO_WRAP_WORD);
     int txt_w, txt_h;
     pango_layout_get_size(lut, &txt_w, &txt_h);

@@ -44,6 +44,12 @@ struct DECL_VISUALUI DropFilesInfo {
     GtkSelectionData *sel_data;
     guint info, time;
 };
+
+struct DECL_VISUALUI FontDescription {
+    PangoFontDescription *desc = nullptr;
+    bool underline = false;
+    bool strikeOut = false;
+};
 #endif
 
 struct DECL_VISUALUI FontInfo {
