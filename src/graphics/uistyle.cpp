@@ -165,7 +165,7 @@ public:
                 toLowerCase(tag);
                 if (tag == _T("color")) {
                     Palette::Role role = Palette::PALETTE_ROLE_LAST;
-                    tstring normal_val, hover_val, pressed_val, disabled_val;
+                    tstring normal_val, active_val, hover_val, pressed_val, disabled_val;
                     auto attrs = style_attr.getAttributes();
                     for (const auto &attr : attrs) {
                         auto key = attr.first;
@@ -205,6 +205,9 @@ public:
                         if (key == _T("pressed")) {
                             pressed_val = val;
                         } else
+                        if (key == _T("active")) {
+                            active_val = val;
+                        } else
                         if (key == _T("disabled")) {
                             disabled_val = val;
                         }
@@ -216,6 +219,9 @@ public:
                         }
                         if (!pressed_val.empty()) {
                             widgetStyle.colors.push_back({role, Palette::Pressed, pressed_val});
+                        }
+                        if (!active_val.empty()) {
+                            widgetStyle.colors.push_back({role, Palette::Active, active_val});
                         }
                         if (!disabled_val.empty()) {
                             widgetStyle.colors.push_back({role, Palette::Disabled, disabled_val});

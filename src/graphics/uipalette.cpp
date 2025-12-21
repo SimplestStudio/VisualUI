@@ -7,30 +7,37 @@
 Palette::Palette()
 {
     palette[Background][Disabled] = 0x21252b;
+    palette[Background][Active]   = 0x21252b;
     palette[Background][Normal]   = 0x21252b;
     palette[Background][Hover]    = 0x34383f;
     palette[Background][Pressed]  = 0x30343c;
     palette[Border][Disabled]     = 0x21252b;
+    palette[Border][Active]       = 0x21252b;
     palette[Border][Normal]       = 0x21252b;
     palette[Border][Hover]        = 0x34383f;
     palette[Border][Pressed]      = 0x30343c;
     palette[Base][Disabled]       = 0x0000ff;
+    palette[Base][Active]         = 0x0000ff;
     palette[Base][Normal]         = 0x0000ff;
     palette[Base][Hover]          = 0x0000ff;
     palette[Base][Pressed]        = 0x0000ff;
     palette[AlternateBase][Disabled] = 0xff0000;
+    palette[AlternateBase][Active]   = 0xff0000;
     palette[AlternateBase][Normal]   = 0xff0000;
     palette[AlternateBase][Hover]    = 0xff0000;
     palette[AlternateBase][Pressed]  = 0xff0000;
     palette[Text][Disabled]       = 0xeeeeee;
+    palette[Text][Active]         = 0xeeeeee;
     palette[Text][Normal]         = 0xeeeeee;
     palette[Text][Hover]          = 0xaaaaaa;
     palette[Text][Pressed]        = 0xaaaaaa;
     palette[Primitive][Disabled]  = 0xeeeeee;
+    palette[Primitive][Active]    = 0xeeeeee;
     palette[Primitive][Normal]    = 0xeeeeee;
     palette[Primitive][Hover]     = 0xeeeeee;
     palette[Primitive][Pressed]   = 0xeeeeee;
     palette[AlternatePrimitive][Disabled] = 0x888888;
+    palette[AlternatePrimitive][Active]   = 0x333333;
     palette[AlternatePrimitive][Normal]   = 0x333333;
     palette[AlternatePrimitive][Hover]    = 0x333333;
     palette[AlternatePrimitive][Pressed]  = 0x333333;

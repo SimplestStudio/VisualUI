@@ -32,6 +32,7 @@ public:
 
     enum State : BYTE {
         Disabled = 0,
+        Active,
         Normal,
         Hover,
         Pressed,
