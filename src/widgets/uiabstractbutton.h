@@ -13,8 +13,11 @@ public:
 
     virtual void setText(const tstring &text) noexcept;
     void setChecked(bool checked);
+    void setSelected(bool enabled) noexcept;
+    void setSelectable(bool enabled) noexcept;
     void setToolTip(const tstring &text) noexcept;
     tstring text() noexcept;
+    bool isSelected() noexcept;
     bool isChecked() noexcept;
     void restrictClickArea(bool restrict) noexcept;
     void adjustSizeBasedOnContent();
@@ -34,6 +37,8 @@ protected:
     RECT m_check_rc;
     UIToolTipHandler *m_tooltipHandler;
     bool m_checked,
+         m_selected,
+         m_selectable,
          m_restrictedClickArea;
 
 private:

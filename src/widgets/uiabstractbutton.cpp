@@ -16,6 +16,8 @@ UIAbstractButton::UIAbstractButton(UIWidget *parent, const tstring &text) :
     m_text(text),
     m_tooltipHandler(nullptr),
     m_checked(false),
+    m_selected(false),
+    m_selectable(false),
     m_restrictedClickArea(false)
 {
 #ifdef _WIN32
@@ -44,6 +46,22 @@ void UIAbstractButton::setChecked(bool checked)
     update();
 }
 
+void UIAbstractButton::setSelected(bool enabled) noexcept
+{
+    if (!m_selectable) return;
+
+    m_selected = enabled;
+    if (!m_disabled) {
+        palette()->setCurrentState(m_selected ? Palette::Active : Palette::Normal);
+        update();
+    }
+}
+
+void UIAbstractButton::setSelectable(bool enabled) noexcept
+{
+    m_selectable = enabled;
+}
+
 void UIAbstractButton::setToolTip(const tstring &text) noexcept
 {
     if (!m_tooltipHandler)
@@ -54,6 +72,11 @@ void UIAbstractButton::setToolTip(const tstring &text) noexcept
 tstring UIAbstractButton::text() noexcept
 {
     return m_text;
+}
+
+bool UIAbstractButton::isSelected() noexcept
+{
+    return m_selected;
 }
 
 bool UIAbstractButton::isChecked() noexcept
@@ -104,7 +127,9 @@ bool UIAbstractButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *re
 
     case WM_LBUTTONUP: {
         if (!m_disabled) {
-            palette()->setCurrentState(Palette::Hover);
+            if (m_selectable)
+                m_selected = true;
+            palette()->setCurrentState(m_selected ? Palette::Active : Palette::Hover);
             repaint();
             click();
         }
@@ -113,9 +138,10 @@ bool UIAbstractButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *re
 
     case WM_MOUSEENTER: {
         if (!m_disabled) {
-            palette()->setCurrentState(Palette::Hover);
-            repaint();
-
+            if (!m_selected) {
+                palette()->setCurrentState(Palette::Hover);
+                repaint();
+            }
         }
         break;
     }
@@ -124,8 +150,10 @@ bool UIAbstractButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *re
         if (!m_disabled) {
             if (m_tooltipHandler)
                 m_tooltipHandler->skipToolTip();
-            palette()->setCurrentState(Palette::Normal);
-            repaint();
+            if (!m_selected) {
+                palette()->setCurrentState(Palette::Normal);
+                repaint();
+            }
         }
         break;
     }
@@ -159,7 +187,9 @@ bool UIAbstractButton::event(uint ev_type, void *param)
     case GDK_BUTTON_RELEASE: {
         UIWidget::event(ev_type, param);
         if (!m_disabled) {
-            palette()->setCurrentState(Palette::Hover);
+            if (m_selectable)
+                m_selected = true;
+            palette()->setCurrentState(m_selected ? Palette::Active : Palette::Hover);
             repaint();
             click();
         }
@@ -168,8 +198,10 @@ bool UIAbstractButton::event(uint ev_type, void *param)
 
     case GDK_ENTER_NOTIFY: {
         if (!m_disabled) {
-            palette()->setCurrentState(Palette::Hover);
-            repaint();
+            if (!m_selected) {
+                palette()->setCurrentState(Palette::Hover);
+                repaint();
+            }
         }
         break;
     }
@@ -178,8 +210,10 @@ bool UIAbstractButton::event(uint ev_type, void *param)
         if (!m_disabled) {
             if (m_tooltipHandler)
                 m_tooltipHandler->skipToolTip();
-            palette()->setCurrentState(Palette::Normal);
-            repaint();
+            if (!m_selected) {
+                palette()->setCurrentState(Palette::Normal);
+                repaint();
+            }
         }
         break;
     }
