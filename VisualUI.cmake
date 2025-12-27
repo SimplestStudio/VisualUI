@@ -49,6 +49,7 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/widgets/uicaption.h
     ${UICLASSES}/widgets/uiabstractbutton.h
     ${UICLASSES}/widgets/uibutton.h
+    ${UICLASSES}/widgets/uitoolbutton.h
     ${UICLASSES}/widgets/uicheckbox.h
     ${UICLASSES}/widgets/uiradiobutton.h
     ${UICLASSES}/widgets/uitogglebutton.h
@@ -95,6 +96,7 @@ set(VISUALUI_SOURCES
     ${UICLASSES}/widgets/uicaption.cpp
     ${UICLASSES}/widgets/uiabstractbutton.cpp
     ${UICLASSES}/widgets/uibutton.cpp
+    ${UICLASSES}/widgets/uitoolbutton.cpp
     ${UICLASSES}/widgets/uicheckbox.cpp
     ${UICLASSES}/widgets/uiradiobutton.cpp
     ${UICLASSES}/widgets/uitogglebutton.cpp
