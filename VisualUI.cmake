@@ -57,6 +57,7 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/widgets/uiprogressbar.h
     ${UICLASSES}/widgets/uiscrollbar.h
     ${UICLASSES}/widgets/uiscrollarea.h
+    ${UICLASSES}/widgets/uilistview.h
     ${UICLASSES}/widgets/uilineedit.h
     # ${UICLASSES}/widgets/uitextedit.h
     ${UICLASSES}/layout/uispacer.h
@@ -107,6 +108,7 @@ set(VISUALUI_SOURCES
     ${UICLASSES}/widgets/uiprogressbar.cpp
     ${UICLASSES}/widgets/uiscrollbar.cpp
     ${UICLASSES}/widgets/uiscrollarea.cpp
+    ${UICLASSES}/widgets/uilistview.cpp
     ${UICLASSES}/widgets/uilineedit.cpp
     # ${UICLASSES}/widgets/uitextedit.cpp
     ${UICLASSES}/layout/uispacer.cpp
