@@ -238,6 +238,7 @@ void UIDrawingEngine::DrawRoundedRect(unsigned char corner, int offset, bool cle
     int width = m_rc->width - offset * 2;
     int height = m_rc->height - offset * 2;
 
+    cairo_set_operator(m_cr, CAIRO_OPERATOR_SOURCE);
     COLORREF rgb = palette->color(Palette::Background);
     cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
     RoundedPath(m_cr, corner, x, y, width, height, metrics->value(Metrics::BorderRadius));
