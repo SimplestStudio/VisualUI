@@ -20,6 +20,7 @@ UIMenu::UIMenu(UIWidget *parent, const Rect &rc) :
     gtk_widget_set_can_focus(m_hWindow, FALSE);
     gtk_window_set_accept_focus(GTK_WINDOW(m_hWindow), FALSE);
     gtk_window_set_focus_on_map(GTK_WINDOW(m_hWindow), FALSE);
+    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(m_hWindow), TRUE);
 #endif
 
     m_vlut = new UIBoxLayout(UIBoxLayout::Vertical, UIBoxLayout::AlignCenter);
