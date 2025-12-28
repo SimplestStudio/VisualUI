@@ -23,6 +23,7 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/graphics/uistyle.h
     ${UICLASSES}/graphics/uigeometryanimation.h
     ${UICLASSES}/graphics/uiopacityanimation.h
+    ${UICLASSES}/graphics/uiscalaranimation.h
     ${UICLASSES}/graphics/uiconhandler.h
     ${UICLASSES}/graphics/uidraghandler.h
     ${UICLASSES}/graphics/uitooltiphandler.h
@@ -76,6 +77,7 @@ set(VISUALUI_SOURCES
     ${UICLASSES}/graphics/uistyle.cpp
     ${UICLASSES}/graphics/uigeometryanimation.cpp
     ${UICLASSES}/graphics/uiopacityanimation.cpp
+    ${UICLASSES}/graphics/uiscalaranimation.cpp
     ${UICLASSES}/graphics/uiconhandler.cpp
     ${UICLASSES}/graphics/uidraghandler.cpp
     ${UICLASSES}/graphics/uitooltiphandler.cpp
