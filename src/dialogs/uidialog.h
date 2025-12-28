@@ -24,6 +24,7 @@ public:
 #endif
     void accept() noexcept;
     void reject() noexcept;
+    void setModal() const noexcept;
     int runDialog();
 
 protected:
