@@ -22,6 +22,7 @@ UILineEdit::UILineEdit(UIWidget *parent, const tstring &text) :
 #else
     m_caret(nullptr),
 #endif
+    m_editable(true),
     m_pos(text.length()),
     m_caretPosX(0),
     m_caretPosY(0)
@@ -74,6 +75,11 @@ void UILineEdit::setPlaceholderText(const tstring &text) noexcept
     }
 }
 
+void UILineEdit::setEditable(bool editable)
+{
+    m_editable = editable;
+}
+
 #ifdef _WIN32
 bool UILineEdit::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 {
@@ -82,7 +88,7 @@ bool UILineEdit::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
         return false;
 
     case WM_SETCURSOR:
-        if (!m_disabled && LOWORD(lParam) == HTCLIENT) {
+        if (!m_disabled && m_editable && LOWORD(lParam) == HTCLIENT) {
             SetCursor(LoadCursor(nullptr, IDC_IBEAM));
             *result = TRUE;
             return true;
@@ -110,6 +116,9 @@ bool UILineEdit::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
         textBounds(text, rc);
         m_caretPosX = rc.x + (m_text.empty() || m_pos == 0 ? 0 : rc.width);
         m_caretPosY = rc.y;
+        if (!m_editable)
+            break;
+
         CreateCaret(m_hWindow, NULL, DEFAULT_CARET_WIDTH * m_dpi_ratio, rc.height);
         m_caretCreated = true;
         SetCaretPos(m_caretPosX, m_caretPosY);
@@ -128,6 +137,8 @@ bool UILineEdit::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
     }
 
     case WM_KEYDOWN:
+        if (!m_editable)
+            break;
         switch (wParam) {
         case VK_HOME:
             if (m_pos > 0 && m_text.length() > 0) {
@@ -183,6 +194,8 @@ bool UILineEdit::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
         break;
 
     case WM_CHAR:
+        if (!m_editable)
+            break;
         switch (wParam) {
         case 0x08: // Backspace
             if (m_pos > 0) {
@@ -234,7 +247,7 @@ bool UILineEdit::event(uint ev_type, void *param)
 {
     switch (ev_type) {
     case GDK_ENTER_NOTIFY: {
-        if (!m_disabled) {
+        if (!m_disabled && m_editable) {
             GdkDisplay *display = gtk_widget_get_display(m_hWindow);
             GdkCursor *cursor = gdk_cursor_new_from_name(display, "text");
             GdkWindow *gdk_wnd = gtk_widget_get_window(m_hWindow);
@@ -265,7 +278,7 @@ bool UILineEdit::event(uint ev_type, void *param)
             textBounds(text, rc);
             m_caretPosX = rc.x + (m_text.empty() || m_pos == 0 ? 0 : rc.width);
             m_caretPosY = rc.y;
-            if (!m_caret) {
+            if (!m_caret && m_editable) {
                 m_caret = gtk_caret_create(m_hWindow, DEFAULT_CARET_WIDTH * m_dpi_ratio, rc.height);
                 gtk_caret_set_position(GTK_CARET(m_caret), m_caretPosX, m_caretPosY);
                 gtk_caret_show(GTK_CARET(m_caret));
@@ -282,6 +295,8 @@ bool UILineEdit::event(uint ev_type, void *param)
     }
 
     case GDK_KEY_PRESS: {
+        if (!m_editable)
+            break;
         GdkEventKey *kev = (GdkEventKey*)param;
         switch (kev->keyval) {
         case GDK_KEY_Home:

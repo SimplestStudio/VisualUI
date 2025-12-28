@@ -13,6 +13,7 @@ public:
 
     virtual void setText(const tstring &text) noexcept override;
     void setPlaceholderText(const tstring &text) noexcept;
+    void setEditable(bool editable);
 
 protected:
 #ifdef _WIN32
@@ -35,6 +36,7 @@ private:
     GtkWidget *m_caret;
     Rect m_viewportRc;
 #endif
+    bool m_editable;
     uint32_t m_pos,
          m_caretPosX,
          m_caretPosY;
