@@ -534,6 +534,11 @@ void UIStyle::setStyle(UIWidget *w) const
     pimpl->setPalette(w);
 }
 
+tstring UIStyle::theme() const noexcept
+{
+    return pimpl->themeId;
+}
+
 DWORD UIStyle::themeColor(const tstring &tag) const
 {
     DWORD color = 0;
