@@ -23,6 +23,7 @@ bool UICheckBox::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
     switch (msg) {
     case WM_LBUTTONDOWN: {
         if (!m_disabled) {
+            *result = UIWidget::event(msg, wParam, lParam, result);
             palette()->setCurrentState(Palette::Pressed);
             repaint();
         }
