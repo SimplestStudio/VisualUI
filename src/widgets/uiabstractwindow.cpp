@@ -58,7 +58,7 @@ void UIAbstractWindow::resize(int w, int h)
 }
 #endif
 
-Size UIAbstractWindow::size() const
+Size UIAbstractWindow::size() const noexcept
 {
 #ifdef _WIN32
     RECT rc;
@@ -71,7 +71,7 @@ Size UIAbstractWindow::size() const
 #endif
 }
 
-void UIAbstractWindow::size(int *width, int *height) const
+void UIAbstractWindow::size(int *width, int *height) const noexcept
 {
 #ifdef _WIN32
     RECT rc;
@@ -83,7 +83,7 @@ void UIAbstractWindow::size(int *width, int *height) const
 #endif
 }
 
-Point UIAbstractWindow::pos() const
+Point UIAbstractWindow::pos() const noexcept
 {
 #ifdef _WIN32
     RECT rc;

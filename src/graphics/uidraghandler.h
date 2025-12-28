@@ -20,8 +20,8 @@ public:
     void handleButtonDownEvent(int x, int y);
     void handleButtonUpEvent();
     void handleMouseMoveEvent(int x, int y);
-    void restrictMovementX(bool restrict);
-    void restrictMovementY(bool restrict);
+    void restrictMovementX(bool restrict) noexcept;
+    void restrictMovementY(bool restrict) noexcept;
     void onMoveValidation(DragValidationCallback callback);
 
 private:

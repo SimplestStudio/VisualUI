@@ -29,7 +29,7 @@ public:
         CornerAll  = CornerLTop | CornerRTop | CornerLBottom | CornerRBottom
     };
 
-    UIDrawningSurface *surface();
+    UIDrawningSurface *surface() noexcept;
     void DrawFlatRect(bool clearBkg = true) const noexcept;
     void DrawRoundedRect(unsigned char corner, int offset = 0, bool clearBkg = true) const noexcept;
     void DrawStockCloseIcon() const;

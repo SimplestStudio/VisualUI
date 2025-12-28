@@ -10,8 +10,8 @@ public:
     explicit UISpacer(int w, int h, int hSizeBehavior = SizePolicy::Expanding, int vSizeBehavior = SizePolicy::Expanding);
     ~UISpacer();
 
-    void setSizePolicy(SizePolicy::Properties property, int val);
-    int sizePolicy(SizePolicy::Properties);
+    void setSizePolicy(SizePolicy::Properties property, int val) noexcept;
+    int sizePolicy(SizePolicy::Properties) const noexcept;
 
 private:
     friend class UILayoutItem;

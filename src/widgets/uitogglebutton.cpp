@@ -20,7 +20,7 @@ void UIToggleButton::setChecked(bool checked)
     update();
 }
 
-bool UIToggleButton::isChecked()
+bool UIToggleButton::isChecked() const noexcept
 {
     return m_checked;
 }

@@ -22,7 +22,7 @@ public:
 
     void start(int intervalMs, Mode mode = Mode::Repeating);
     void stop();
-    bool isActive() const;
+    bool isActive() const noexcept;
 
     /* callback */
     void onTimeout(FnVoidVoid callback);

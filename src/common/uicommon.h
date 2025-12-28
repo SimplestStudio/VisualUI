@@ -7,29 +7,29 @@
 #endif
 
 struct DECL_VISUALUI Margins {
-    Margins();
-    Margins(int, int, int, int);
+    Margins() noexcept;
+    Margins(int, int, int, int) noexcept;
 
     int left, top, right, bottom;
 };
 
 struct DECL_VISUALUI Rect {
-    Rect();
-    Rect(int, int, int, int);
+    Rect() noexcept;
+    Rect(int, int, int, int) noexcept;
 
     int x, y, width, height;
 };
 
 struct DECL_VISUALUI Point {
-    Point();
-    Point(int, int);
+    Point() noexcept;
+    Point(int, int) noexcept;
 
     int x, y;
 };
 
 struct DECL_VISUALUI Size {
-    Size();
-    Size(int, int);
+    Size() noexcept;
+    Size(int, int) noexcept;
 
     int width, height;
 };

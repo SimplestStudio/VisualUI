@@ -209,7 +209,7 @@ UIWidget *UIWidget::parentWidget() const noexcept
     return dynamic_cast<UIWidget*>(parent());
 }
 
-Size UIWidget::size() const
+Size UIWidget::size() const noexcept
 {
 #ifdef _WIN32
     RECT rc;
@@ -220,7 +220,7 @@ Size UIWidget::size() const
 #endif
 }
 
-void UIWidget::size(int *width, int *height) const
+void UIWidget::size(int *width, int *height) const noexcept
 {
 #ifdef _WIN32
     RECT rc;
@@ -233,7 +233,7 @@ void UIWidget::size(int *width, int *height) const
 #endif
 }
 
-Point UIWidget::pos() const
+Point UIWidget::pos() const noexcept
 {
 #ifdef _WIN32
     WINDOWPLACEMENT wp;
@@ -258,22 +258,22 @@ void UIWidget::updateGeometry()
 #endif
 }
 
-UIGeometryAnimation *UIWidget::geometryAnimation()
+UIGeometryAnimation *UIWidget::geometryAnimation() noexcept
 {
     return m_geometry_animation;
 }
 
-void UIWidget::setGeometryAnimation(UIGeometryAnimation *geometry_animation)
+void UIWidget::setGeometryAnimation(UIGeometryAnimation *geometry_animation) noexcept
 {
     m_geometry_animation = geometry_animation;
 }
 
-UIDragHandler *UIWidget::dragHandler()
+UIDragHandler *UIWidget::dragHandler() noexcept
 {
     return m_drag_handler;
 }
 
-void UIWidget::setDragHandler(UIDragHandler *drag_handler)
+void UIWidget::setDragHandler(UIDragHandler *drag_handler) noexcept
 {
     m_drag_handler = drag_handler;
 }
@@ -283,7 +283,7 @@ void UIWidget::applyStyle()
     UIApplication::instance()->style()->setStyle(this);
 }
 
-void UIWidget::setSizePolicy(SizePolicy::Properties property, int val)
+void UIWidget::setSizePolicy(SizePolicy::Properties property, int val) noexcept
 {
     m_size_behaviors[property] = val;
 }
@@ -353,7 +353,7 @@ void UIWidget::setBaseSize(int w, int h)
     resize(round(w * m_dpi_ratio), round(h * m_dpi_ratio));
 }
 
-void UIWidget::setCorners(unsigned char corner)
+void UIWidget::setCorners(unsigned char corner) noexcept
 {
     m_corners = corner;
 }
@@ -503,12 +503,12 @@ void UIWidget::ungrabMouse()
 #endif
 }
 
-int UIWidget::sizePolicy(SizePolicy::Properties property)
+int UIWidget::sizePolicy(SizePolicy::Properties property) const noexcept
 {
     return m_size_behaviors[property];
 }
 
-double UIWidget::dpiRatio()
+double UIWidget::dpiRatio() const noexcept
 {
     return m_dpi_ratio;
 }

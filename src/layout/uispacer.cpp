@@ -16,12 +16,12 @@ UISpacer::~UISpacer()
 
 }
 
-int UISpacer::sizePolicy(SizePolicy::Properties property)
+int UISpacer::sizePolicy(SizePolicy::Properties property) const noexcept
 {
     return m_size_behaviors[property];
 }
 
-void UISpacer::setSizePolicy(SizePolicy::Properties property, int val)
+void UISpacer::setSizePolicy(SizePolicy::Properties property, int val) noexcept
 {
     m_size_behaviors[property] = val;
 }

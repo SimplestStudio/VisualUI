@@ -275,13 +275,13 @@ UIApplication::UIApplication() :
 
 }
 
-UIApplication *UIApplication::instance()
+UIApplication *UIApplication::instance() noexcept
 {
     return inst;
 }
 
 #ifdef _WIN32
-HINSTANCE UIApplication::moduleHandle()
+HINSTANCE UIApplication::moduleHandle() noexcept
 {
     return d_ptr->hInstance;
 }
@@ -301,17 +301,17 @@ void UIApplication::setFont(const FontInfo &fontInfo)
     d_ptr->fontInfo = fontInfo;
 }
 
-UIApplication::LayoutDirection UIApplication::layoutDirection() const
+UIApplication::LayoutDirection UIApplication::layoutDirection() const noexcept
 {
     return d_ptr->layoutDirection;
 }
 
-FontInfo UIApplication::font() const
+FontInfo UIApplication::font() const noexcept
 {
     return d_ptr->fontInfo;
 }
 
-UIStyle* UIApplication::style()
+UIStyle* UIApplication::style() noexcept
 {
     return d_ptr->style;
 }

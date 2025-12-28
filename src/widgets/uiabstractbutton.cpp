@@ -69,17 +69,17 @@ void UIAbstractButton::setToolTip(const tstring &text) noexcept
     m_tooltipHandler->setToolTipText(text);
 }
 
-tstring UIAbstractButton::text() noexcept
+tstring UIAbstractButton::text() const noexcept
 {
     return m_text;
 }
 
-bool UIAbstractButton::isSelected() noexcept
+bool UIAbstractButton::isSelected() const noexcept
 {
     return m_selected;
 }
 
-bool UIAbstractButton::isChecked() noexcept
+bool UIAbstractButton::isChecked() const noexcept
 {
     return m_checked;
 }

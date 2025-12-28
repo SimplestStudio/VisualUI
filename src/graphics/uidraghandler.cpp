@@ -101,12 +101,12 @@ void UIDragHandler::handleMouseMoveEvent(int x, int y)
     }
 }
 
-void UIDragHandler::restrictMovementX(bool restrict)
+void UIDragHandler::restrictMovementX(bool restrict) noexcept
 {
     m_restrictX = restrict;
 }
 
-void UIDragHandler::restrictMovementY(bool restrict)
+void UIDragHandler::restrictMovementY(bool restrict) noexcept
 {
     m_restrictY = restrict;
 }

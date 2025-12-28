@@ -51,7 +51,7 @@ void UITimer::stop()
     }
 }
 
-bool UITimer::isActive() const
+bool UITimer::isActive() const noexcept
 {
     return m_timerId != 0;
 }

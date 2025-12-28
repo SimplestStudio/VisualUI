@@ -16,9 +16,9 @@ public:
     void setSelected(bool enabled) noexcept;
     void setSelectable(bool enabled) noexcept;
     void setToolTip(const tstring &text) noexcept;
-    tstring text() noexcept;
-    bool isSelected() noexcept;
-    bool isChecked() noexcept;
+    tstring text() const noexcept;
+    bool isSelected() const noexcept;
+    bool isChecked() const noexcept;
     void restrictClickArea(bool restrict) noexcept;
     void adjustSizeBasedOnContent();
 

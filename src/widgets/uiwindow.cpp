@@ -501,7 +501,7 @@ BYTE UIWindow::cornersPlacementAndRadius(int &radius)
     return UIDrawingEngine::CornerAll;
 }
 
-Size UIWindow::size() const
+Size UIWindow::size() const noexcept
 {
     int w = 0, h = 0;
     gtk_window_get_size(GTK_WINDOW(m_hWindow), &w, &h);
@@ -512,7 +512,7 @@ Size UIWindow::size() const
     return Size(w, h);
 }
 
-void UIWindow::size(int *width, int *height) const
+void UIWindow::size(int *width, int *height) const noexcept
 {
     gtk_window_get_size(GTK_WINDOW(m_hWindow), width, height);
     if (!gtk_window_is_maximized(GTK_WINDOW(m_hWindow))) {

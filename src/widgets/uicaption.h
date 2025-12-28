@@ -13,7 +13,7 @@ public:
     explicit UICaption(UIWidget *parent = nullptr);
     ~UICaption();
 
-    void setResizingAvailable(bool);
+    void setResizingAvailable(bool) noexcept;
 
 protected:
 #ifdef _WIN32
@@ -24,7 +24,7 @@ protected:
     virtual void onPaint(const RECT &rc) override;
 
 private:
-    bool isResizingAvailable();
+    bool isResizingAvailable() const noexcept;
 #ifdef _WIN32
     bool isPointInResizeArea(int posY);
     bool postMsg(DWORD cmd);

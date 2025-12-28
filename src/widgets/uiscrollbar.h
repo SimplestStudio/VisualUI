@@ -22,7 +22,7 @@ public:
     Signal<int> valueChanged;
 
 private:
-    int maxThumbPos() const;
+    int maxThumbPos() const noexcept;
     void onThumbMoved(int pos);
 
     UIWidget *m_parent;

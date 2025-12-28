@@ -33,8 +33,8 @@ public:
     virtual void move(int, int) override;
 #else
     BYTE cornersPlacementAndRadius(int &radius);
-    virtual Size size() const override;
-    virtual void size(int*, int*) const override;
+    virtual Size size() const noexcept override;
+    virtual void size(int*, int*) const noexcept override;
 #endif
     void setMinimumSize(int w, int h);
     void setMaximumSize(int w, int h);

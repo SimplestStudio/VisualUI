@@ -116,7 +116,7 @@ int UIScrollBar::value() const noexcept
     return m_value;
 }
 
-int UIScrollBar::maxThumbPos() const
+int UIScrollBar::maxThumbPos() const noexcept
 {
     if (!m_parent) return 0;
 

@@ -18,9 +18,9 @@ public:
     virtual void move(int, int) override;
     virtual void resize(int, int) override;
 #endif
-    virtual Size size() const override;
-    virtual void size(int*, int*) const override;
-    virtual Point pos() const override;
+    virtual Size size() const noexcept override;
+    virtual void size(int*, int*) const noexcept override;
+    virtual Point pos() const noexcept override;
     void showAll();
 
 protected:

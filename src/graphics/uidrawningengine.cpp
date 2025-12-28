@@ -165,7 +165,7 @@ UIDrawingEngine::~UIDrawingEngine()
 
 }
 
-UIDrawningSurface *UIDrawingEngine::surface()
+UIDrawningSurface *UIDrawingEngine::surface() noexcept
 {
     return m_ds;
 }

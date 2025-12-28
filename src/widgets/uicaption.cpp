@@ -23,7 +23,7 @@ UICaption::~UICaption()
 
 }
 
-void UICaption::setResizingAvailable(bool isResizingAvailable)
+void UICaption::setResizingAvailable(bool isResizingAvailable) noexcept
 {
     m_isResizingAvailable = isResizingAvailable;
 }
@@ -155,7 +155,7 @@ void UICaption::onPaint(const RECT &rc)
         de->DrawString(rc, m_text, m_hFont);
 }
 
-bool UICaption::isResizingAvailable()
+bool UICaption::isResizingAvailable() const noexcept
 {
 #ifdef _WIN32
     return m_isResizingAvailable && UIUtils::winVersion() >= UIUtils::WinVer::Win10 && !IsZoomed(m_root_hWnd);
