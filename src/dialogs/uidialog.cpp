@@ -127,7 +127,7 @@ bool UIDialog::event(uint ev_type, void *param)
     }
 
     case GDK_BUTTON_PRESS: {
-        return false;
+        break;
     }
 
     case GDK_DELETE: {

@@ -2,7 +2,9 @@
 #define UICOMMON_H
 
 #include "uidefines.h"
-#ifdef __linux__
+#ifdef _WIN32
+# include <Windows.h>
+#else
 # include "gtk/gtk.h"
 #endif
 
@@ -34,7 +36,13 @@ struct DECL_VISUALUI Size {
     int width, height;
 };
 
-#ifdef __linux__
+#ifdef _WIN32
+struct NotifyParams {
+    HWND senderHwnd = nullptr;
+    WPARAM wParam = 0;
+    LPARAM lParam = 0;
+};
+#else
 typedef Point POINT;
 typedef Rect RECT;
 
