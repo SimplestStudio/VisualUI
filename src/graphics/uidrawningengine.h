@@ -46,7 +46,7 @@ public:
 #ifdef _WIN32
     void Begin(UIDrawningSurface*, HWND, RECT *rc, double dpi = 1.0);
     void DrawTopBorder(int, COLORREF) const;
-    void DrawEmfIcon(Gdiplus::Metafile *hEmf) noexcept;
+    void DrawEmfIcon(Gdiplus::Metafile *hEmf, float angle = 0) noexcept;
     void DrawImage(Gdiplus::Bitmap *hBmp) const noexcept;
     void End() noexcept;
 
@@ -57,7 +57,7 @@ public:
     void LayeredChildEnd() noexcept;
 #else
     void Begin(UIDrawningSurface*, cairo_t*, Rect *rc) noexcept;
-    void DrawSvgIcon(_RsvgHandle *hSvg) const noexcept;
+    void DrawSvgIcon(_RsvgHandle *hSvg, float angle = 0) const noexcept;
     void End() noexcept;
 #endif
 

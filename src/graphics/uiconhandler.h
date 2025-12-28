@@ -10,6 +10,7 @@
 #endif
 
 class UIWidget;
+class UIScalarAnimation;
 struct _RsvgHandle;
 class DECL_VISUALUI UIconHandler
 {
@@ -34,6 +35,12 @@ public:
     void setPixmap(UIPixmap &&pixmap);
     void setIconSize(int w, int h);
 
+    UIScalarAnimation* iconRotateAnimation() const noexcept;
+    void setIconRotateAnimation(UIScalarAnimation*);
+
+    double iconAngle() const;
+    void setIconAngle(double angle) noexcept;
+
 protected:
     PlatformBitmap *m_hBmp;
 #ifdef _WIN32
@@ -45,6 +52,8 @@ protected:
 
 private:
     UIWidget *m_owner;
+    UIScalarAnimation *m_rotate_animation;
+    double m_angle;
 };
 
 #endif // UICONHANDLER_H

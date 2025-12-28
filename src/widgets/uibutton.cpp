@@ -117,12 +117,12 @@ void UIButton::onPaint(const RECT &rc)
     if (m_hBmp)
         de->DrawImage(m_hBmp);
     if (m_hEmf)
-        de->DrawEmfIcon(m_hEmf);
+        de->DrawEmfIcon(m_hEmf, iconAngle());
 #else
     if (m_hBmp)
         de->DrawIcon(m_hBmp);
     if (m_hSvg)
-        de->DrawSvgIcon(m_hSvg);
+        de->DrawSvgIcon(m_hSvg, iconAngle());
 #endif
     if (!m_text.empty())
         de->DrawString(rc, m_text, m_hFont);

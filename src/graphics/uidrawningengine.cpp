@@ -1002,7 +1002,7 @@ void UIDrawingEngine::DrawTopBorder(int brdWidth, COLORREF brdColor) const
     DeleteObject(pen);
 }
 
-void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf) noexcept
+void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf, float angle) noexcept
 {
     const Metrics *metrics = m_ds->metrics();
     Margins mrg;
@@ -1012,20 +1012,32 @@ void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf) noexcept
     m_graphics->SetInterpolationMode(Gdiplus::InterpolationModeHighQuality);
     m_graphics->SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
     m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
-    if (m_rtl) {
-        if (!m_root_is_layered) {
-            m_origMatrix = new Gdiplus::Matrix;
-            m_graphics->GetTransform(m_origMatrix);
-            Gdiplus::Matrix rtlMatrix(-1.0f, 0.0f, 0.0f, 1.0f, float(m_rc->right + m_rc->left - 1), 0.0f);
-            m_graphics->SetTransform(&rtlMatrix);
-        }
+
+    m_origMatrix = new Gdiplus::Matrix;
+    m_graphics->GetTransform(m_origMatrix);
+
+    float centerX = dst_rc.x + dst_rc.width / 2.0f;
+    float centerY = dst_rc.y + dst_rc.height / 2.0f;
+
+    Gdiplus::Matrix transformMatrix;
+    if (m_rtl && !m_root_is_layered) {
+        transformMatrix.Translate(centerX, centerY);
+        transformMatrix.Rotate(angle);
+        transformMatrix.Translate(-centerX, -centerY);
+
+        Gdiplus::Matrix rtlMatrix(-1.0f, 0.0f, 0.0f, 1.0f, float(m_rc->right + m_rc->left - 1), 0.0f);
+        transformMatrix.Multiply(&rtlMatrix, Gdiplus::MatrixOrderPrepend);
+    } else {
+        transformMatrix.Translate(centerX, centerY);
+        transformMatrix.Rotate(angle);
+        transformMatrix.Translate(-centerX, -centerY);
     }
+    m_graphics->SetTransform(&transformMatrix);
     m_graphics->DrawImage(hEmf, dst_rc.x, dst_rc.y, dst_rc.width, dst_rc.height);
-    if (m_rtl && m_origMatrix) {
-        m_graphics->SetTransform(m_origMatrix);
-        delete m_origMatrix;
-        m_origMatrix = nullptr;
-    }
+    m_graphics->SetTransform(m_origMatrix);
+    delete m_origMatrix;
+    m_origMatrix = nullptr;
+
     m_graphics->SetInterpolationMode(Gdiplus::InterpolationModeDefault);
     m_graphics->SetPixelOffsetMode(Gdiplus::PixelOffsetModeDefault);
     m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeDefault);
@@ -1179,7 +1191,7 @@ void UIDrawingEngine::Begin(UIDrawningSurface *ds, cairo_t *cr, Rect *rc) noexce
     m_rc = rc;
 }
 
-void UIDrawingEngine::DrawSvgIcon(_RsvgHandle *hSvg) const noexcept
+void UIDrawingEngine::DrawSvgIcon(_RsvgHandle *hSvg, float angle) const noexcept
 {
     const Metrics *metrics = m_ds->metrics();
     Margins mrg;
@@ -1191,6 +1203,12 @@ void UIDrawingEngine::DrawSvgIcon(_RsvgHandle *hSvg) const noexcept
     rsvg_handle_get_dimensions(hSvg, &dm);
 
     cairo_save(m_cr);
+    double center_x = dst_rc.x + dst_rc.width / 2.0;
+    double center_y = dst_rc.y + dst_rc.height / 2.0;
+    cairo_translate(m_cr, center_x, center_y);
+    cairo_rotate(m_cr, angle * M_PI / 180.0);
+    cairo_translate(m_cr, -center_x, -center_y);
+
     cairo_translate(m_cr, dst_rc.x, dst_rc.y);
     cairo_scale(m_cr, (double)dst_rc.width / dm.width, (double)dst_rc.height / dm.height);
     rsvg_handle_render_cairo(hSvg, m_cr);
