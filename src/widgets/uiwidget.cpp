@@ -247,6 +247,26 @@ Point UIWidget::pos() const noexcept
 #endif
 }
 
+Point UIWidget::mapToGlobal(Point localPos) const
+{
+#ifdef _WIN32
+    POINT pt = { localPos.x, localPos.y };
+    ClientToScreen(m_hWindow, &pt);
+    return Point(pt.x, pt.y);
+#else
+    if (GtkWidget *root = gtk_widget_get_toplevel(m_hWindow)) {
+        if (GdkWindow *gdk_wnd = gtk_widget_get_window(root)) {
+            gint local_x = localPos.x, local_y = localPos.y;
+            gint wnd_x = 0, wnd_y = 0;
+            gtk_widget_translate_coordinates(m_hWindow, root, 0, 0, &local_x, &local_y);
+            gdk_window_get_origin(gdk_wnd, &wnd_x, &wnd_y);
+            return Point(wnd_x + local_x, wnd_y + local_y);
+        }
+    }
+    return localPos;
+#endif
+}
+
 void UIWidget::updateGeometry()
 {
 #ifdef _WIN32
@@ -460,6 +480,12 @@ bool UIWidget::isVisible() const noexcept
 #endif
 }
 
+bool UIWidget::isWindow() const noexcept
+{
+    UIObject::ObjectType type = objectType();
+    return type == UIObject::WindowType || type == UIObject::DialogType || type == UIObject::PopupType;
+}
+
 bool UIWidget::underMouse()
 {
 #ifdef _WIN32
@@ -531,13 +557,14 @@ PlatformWindow UIWidget::platformWindow() const noexcept
 UIWidget* UIWidget::topLevelWidget() const noexcept
 {
     const UIWidget *top = this;
-    while (const UIWidget *parent = top->parentWidget()) {
+    UIWidget *parent = nullptr;
+    while (!top->isWindow() && (parent = top->parentWidget()) != nullptr) {
         top = parent;
     }
     return const_cast<UIWidget*>(top);
 }
 
-UIWidget *UIWidget::widgetFromHwnd(UIWidget *parent, PlatformWindow hwnd)
+UIWidget *UIWidget::widgetFromPlatformWindow(UIWidget *parent, PlatformWindow hwnd)
 {
     return new UIWidget(parent, ObjectType::WidgetType, hwnd);
 }

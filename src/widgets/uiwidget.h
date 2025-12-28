@@ -29,6 +29,7 @@ public:
     virtual Size size() const noexcept;
     virtual void size(int*, int*) const noexcept;
     virtual Point pos() const noexcept;
+    Point mapToGlobal(Point localPos) const;
     void updateGeometry();
     UIGeometryAnimation* geometryAnimation() noexcept;
     void setGeometryAnimation(UIGeometryAnimation*) noexcept;
@@ -49,6 +50,7 @@ public:
     bool isCreated() const noexcept;
     bool isActive() const noexcept;
     bool isVisible() const noexcept;
+    bool isWindow() const noexcept;
     bool underMouse();
     void grabMouse();
     void ungrabMouse();
@@ -58,7 +60,7 @@ public:
     UILayout* layout() const noexcept;
     PlatformWindow platformWindow() const noexcept;
     UIWidget* topLevelWidget() const noexcept;
-    static UIWidget* widgetFromHwnd(UIWidget *parent, PlatformWindow);
+    static UIWidget* widgetFromPlatformWindow(UIWidget *parent, PlatformWindow);
 #ifdef _WIN32
     void enableClipSiblings() const;
 #endif
