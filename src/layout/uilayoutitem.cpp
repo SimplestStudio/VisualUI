@@ -3,7 +3,7 @@
 #include "uispacer.h"
 #include <cmath>
 
-UILayoutItem::UILayoutItem() :
+UILayoutItem::UILayoutItem() noexcept :
     wgt(nullptr),
     // lut(nullptr),
     spr(nullptr),
@@ -15,7 +15,7 @@ UILayoutItem::UILayoutItem() :
 
 }
 
-UILayoutItem::~UILayoutItem()
+UILayoutItem::~UILayoutItem() noexcept
 {
 
 }

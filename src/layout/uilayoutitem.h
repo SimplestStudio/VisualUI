@@ -10,8 +10,8 @@ class UISpacer;
 class DECL_VISUALUI UILayoutItem
 {
 public:
-    UILayoutItem();
-    ~UILayoutItem();
+    UILayoutItem() noexcept;
+    ~UILayoutItem() noexcept;
 
     UIWidget *widget() const noexcept;
     // UILayout *layout() const noexcept;

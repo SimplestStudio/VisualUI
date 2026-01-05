@@ -2,12 +2,18 @@
 #ifdef _WIN32
 # include <string>
 # include <sddl.h>
+# include <intrin.h>
 # define BIT123_LAYOUTRTL 0x08000000
 # ifndef LOCALE_IREADINGLAYOUT
 #  define LOCALE_IREADINGLAYOUT 0x70
 # endif
 # ifndef MDT_EFFECTIVE_DPI
 #  define MDT_EFFECTIVE_DPI 0
+# endif
+# ifdef _WIN64
+#  define GET_TIB() ((NT_TIB*)__readgsqword(0x30))
+# else
+#  define GET_TIB() ((NT_TIB*)__readfsdword(0x18))
 # endif
 #else
 # include <stdlib.h>
@@ -123,14 +129,16 @@ std::wstring UIUtils::currentUserSID()
     return user_sid;
 }
 
-DWORD UIUtils::regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value)
+DWORD UIUtils::regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value, bool *success)
 {
     HKEY hKey;
     DWORD dwValue = 0;
     if (RegOpenKeyEx(rootKey, subkey, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
         DWORD dwType = REG_DWORD;
         DWORD dwSize = sizeof(DWORD);
-        RegQueryValueEx(hKey, value, nullptr, &dwType, (LPBYTE)&dwValue, &dwSize);
+        if (RegQueryValueEx(hKey, value, nullptr, &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS && success) {
+            *success = true;
+        }
         RegCloseKey(hKey);
     }
     return dwValue;
@@ -231,46 +239,29 @@ void UIUtils::loadStringResource(tstring &str, GResource *res, const char *resou
 
 // CRITICAL: An incorrect implementation or misuse of this function
 // will result in application crashes or memory corruption.
-bool UIUtils::isAllocOnHeap(void *addr) {
+bool UIMemory::isOnStack(void *addr)
+{
 #ifdef _WIN32
-    if (HANDLE procHeap = GetProcessHeap()) {
-        if (HeapLock(procHeap)) {
-            bool res = false;
-            PROCESS_HEAP_ENTRY entry = {0};
-            while (HeapWalk(procHeap, &entry)) {
-                if ((entry.wFlags & PROCESS_HEAP_REGION) && addr >= (void*)entry.Region.lpFirstBlock && addr <= (void*)entry.Region.lpLastBlock) {
-                    res = true;
-                    break;
-                }
-            }
-            if (!HeapUnlock(procHeap))
-                res = false;
-            return res;
-        }
-    }
+    NT_TIB* tib = GET_TIB();
+    void* stackBase = tib->StackBase;
+    void* stackLimit = tib->StackLimit;
+    return (addr > stackLimit && addr <= stackBase);
 #else
-    if (FILE *maps = fopen("/proc/self/maps", "r")) {
-        char *line = NULL;
-        size_t line_size = 0;
-        uintptr_t start_address = 0, end_address = 0;
-        int name_start = 0, name_end = 0;
-        while (getline(&line, &line_size, maps) > 0) {
-            if (sscanf(line, "%lx-%lx %*s %*lx %*u:%*u %*lu %n%*[^\n]%n", &start_address, &end_address, &name_start, &name_end) == 2) {
-                if (name_end > name_start) {
-                    line[name_end] = '\0';
-                    if (strcmp(&line[name_start], "[heap]") == 0 && (uintptr_t)addr >= start_address && (uintptr_t)addr <= end_address) {
-                        free(line);
-                        fclose(maps);
-                        return true;
-                    }
-                }
-            }
+    pthread_attr_t attr;
+    void *stack_addr;
+    size_t stack_size;
+    if (pthread_getattr_np(pthread_self(), &attr) == 0) {
+        if (pthread_attr_getstack(&attr, &stack_addr, &stack_size) == 0) {
+            pthread_attr_destroy(&attr);
+            uintptr_t stack_start = (uintptr_t)stack_addr;
+            uintptr_t stack_end = stack_start + stack_size;
+            uintptr_t check_addr = (uintptr_t)addr;
+            return (check_addr >= stack_start && check_addr < stack_end);
         }
-        free(line);
-        fclose(maps);
+        pthread_attr_destroy(&attr);
     }
-#endif
     return false;
+#endif
 }
 
 #ifdef _WIN32

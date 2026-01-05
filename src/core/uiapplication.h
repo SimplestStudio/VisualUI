@@ -30,19 +30,18 @@ public:
     };
 
     UIApplication& operator=(const UIApplication&) = delete;
-    static UIApplication *instance();
+    static UIApplication *instance() noexcept;
 #ifdef _WIN32
-    HINSTANCE moduleHandle();
+    HINSTANCE moduleHandle() noexcept;
 #else
     static void postEvent(GtkWidget*, uint event_type, void *param);
     static bool sendEvent(GtkWidget*, uint event_type, void *param);
 #endif
     void setLayoutDirection(LayoutDirection);
-    void setFont(const tstring &font, double pointSize = 10) const;
-    LayoutDirection layoutDirection() const;
-    tstring font() const;
-    UIStyle* style();
-    double fontPointSize();
+    void setFont(const FontInfo &fontInfo);
+    FontInfo font() const noexcept;
+    LayoutDirection layoutDirection() const noexcept;
+    UIStyle* style() noexcept;
 
     int exec();
     void exit(int);

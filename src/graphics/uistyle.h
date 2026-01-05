@@ -33,6 +33,7 @@ public:
     void setDefaultTheme(const tstring &theme);
     void setTheme(const tstring &theme);
     void setStyle(UIWidget *w) const;
+    tstring theme() const noexcept;
     DWORD themeColor(const tstring &tag) const;
 
 private:

@@ -6,12 +6,13 @@ UIDragHandler::UIDragHandler(UIWidget *target) :
     m_target(target),
     m_dragStart({0,0}),
     m_winStart({0,0}),
-    m_dragging(false)
+    m_dragging(false),
+    m_restrictX(false),
+    m_restrictY(false)
 {
     m_hWindow = target->platformWindow();
 #ifdef _WIN32
-    DWORD style = GetWindowLong(m_hWindow, GWL_STYLE);
-    SetWindowLong(m_hWindow, GWL_STYLE, style | WS_CLIPSIBLINGS);
+    target->enableClipSiblings();
 #else
     m_parent = gtk_widget_get_parent(m_hWindow);
 #endif
@@ -30,11 +31,6 @@ void UIDragHandler::handleButtonDownEvent(int x, int y)
     m_target->bringAboveSiblings();
     m_target->grabMouse();
 #ifdef _WIN32
-    ClientToScreen(m_hWindow, &m_dragStart);
-    RECT rc;
-    GetWindowRect(m_hWindow, &rc);
-    m_winStart.x = rc.left;
-    m_winStart.y = rc.top;
 #else
     int child_x = 0, child_y = 0;
     if (m_parent) {
@@ -56,24 +52,74 @@ void UIDragHandler::handleButtonUpEvent()
 void UIDragHandler::handleMouseMoveEvent(int x, int y)
 {
     if (m_dragging) {
+        int delta_x = x - m_dragStart.x;
+        int delta_y = y - m_dragStart.y;
+
+        int new_x = 0;
+        int new_y = 0;
 #ifdef _WIN32
-        POINT pt;
-        pt.x = x;
-        pt.y = y;
-        ClientToScreen(m_hWindow, &pt);
-        int new_x = m_winStart.x + pt.x - m_dragStart.x;
-        int new_y = m_winStart.y + pt.y - m_dragStart.y;
+        RECT rc;
+        GetWindowRect(m_hWindow, &rc);
 
+        POINT new_pos = { rc.left, rc.top };
         HWND parent = GetParent(m_hWindow);
-        POINT new_pos = { new_x, new_y };
-        ScreenToClient(parent, &new_pos);
+        if (parent)
+            ScreenToClient(parent, &new_pos);
 
-        SetWindowPos(m_hWindow, NULL, new_pos.x, new_pos.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+        if (!m_restrictX) {
+            new_x = new_pos.x + delta_x;
+        } else {
+            new_x = new_pos.x;
+        }
+
+        if (!m_restrictY) {
+            new_y = new_pos.y + delta_y;
+        } else {
+            new_y = new_pos.y;
+        }
+
+        if (validateMove(new_x, new_y))
+            SetWindowPos(m_hWindow, NULL, new_x, new_y, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE /*| SWP_NOCOPYBITS*/);
 #else
-        int new_x = m_winStart.x + x - m_dragStart.x;
-        int new_y = m_winStart.y + y - m_dragStart.y;
-        m_target->move(new_x, new_y);
-        m_target->updateGeometry();
+        if (!m_restrictX) {
+            new_x = m_winStart.x + delta_x;
+        } else {
+            new_x = m_winStart.x;
+        }
+
+        if (!m_restrictY) {
+            new_y = m_winStart.y + delta_y;
+        } else {
+            new_y = m_winStart.y;
+        }
+
+        if (validateMove(new_x, new_y)) {
+            m_target->move(new_x, new_y);
+            m_target->updateGeometry();
+        }
 #endif
     }
+}
+
+void UIDragHandler::restrictMovementX(bool restrict) noexcept
+{
+    m_restrictX = restrict;
+}
+
+void UIDragHandler::restrictMovementY(bool restrict) noexcept
+{
+    m_restrictY = restrict;
+}
+
+void UIDragHandler::onMoveValidation(DragValidationCallback callback)
+{
+    m_validationCallback = callback;
+}
+
+bool UIDragHandler::validateMove(int x, int y) const
+{
+    if (!m_validationCallback) {
+        return true;
+    }
+    return m_validationCallback(x, y);
 }

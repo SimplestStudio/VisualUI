@@ -51,6 +51,30 @@ void UIBoxLayout::addSpacer(UISpacer *spr)
     m_items.push_back(item);
 }
 
+void UIBoxLayout::removeWidget(UIWidget *wgt, UIWidget *parent)
+{
+    if (!wgt) return;
+
+    // auto it = m_destroy_conn.find(wgt);
+    // if (it != m_destroy_conn.end()) {
+    //     wgt->aboutToDestroySignal.disconnect(it->second);
+    //     m_destroy_conn.erase(it);
+    // }
+
+    auto it = std::find_if(m_items.begin(), m_items.end(), [wgt](const UILayoutItem &item) {
+        return item.wgt == wgt;
+    });
+
+    if (it != m_items.end()) {
+        m_items.erase(it);
+
+        if (parent) {
+            Size sz = parent->size();
+            onResize(sz.width, sz.height, parent->dpiRatio());
+        }
+    }
+}
+
 void UIBoxLayout::setContentMargins(int left, int top, int right, int bottom) noexcept
 {
     m_margins = Margins(left, top, right, bottom);
@@ -228,4 +252,16 @@ void UIBoxLayout::onResize(int w, int h, double dpi) noexcept
             }
         }
     }
+}
+
+const UILayoutItem* UIBoxLayout::itemAt(int index) const noexcept
+{
+    if (index < 0 || index >= (int)m_items.size())
+        return nullptr;
+    return &m_items[index];
+}
+
+int UIBoxLayout::count() const noexcept
+{
+    return (int)m_items.size();
 }

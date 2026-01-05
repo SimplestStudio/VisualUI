@@ -3,6 +3,7 @@
 /examples/ImageViewer/res/gresource.c
 /examples/ImageViewer/build*
 /lib/build*
+/install*
 Makefile*
 *.qmake*
 *.qtc_clang*

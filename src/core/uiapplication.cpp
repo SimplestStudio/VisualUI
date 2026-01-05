@@ -20,9 +20,8 @@ public:
     UIApplicationPrivate();
     ~UIApplicationPrivate();
 
-    tstring font;
+    FontInfo fontInfo;
     UIStyle  *style;
-    double  fontPointSize;
 #ifdef _WIN32
     ULONG_PTR gdi_token;
     HINSTANCE hInstance;
@@ -55,7 +54,6 @@ HHOOK UIApplication::UIApplicationPrivate::hHook = nullptr;
 UIApplication::UIApplicationPrivate::UIApplicationPrivate() :
     style(&UIStyle::instance()),
 #ifdef _WIN32
-    fontPointSize(10.0),
     gdi_token(0),
     hInstance(nullptr),
 #else
@@ -277,13 +275,13 @@ UIApplication::UIApplication() :
 
 }
 
-UIApplication *UIApplication::instance()
+UIApplication *UIApplication::instance() noexcept
 {
     return inst;
 }
 
 #ifdef _WIN32
-HINSTANCE UIApplication::moduleHandle()
+HINSTANCE UIApplication::moduleHandle() noexcept
 {
     return d_ptr->hInstance;
 }
@@ -298,30 +296,24 @@ void UIApplication::setLayoutDirection(LayoutDirection layoutDirection)
     d_ptr->layoutDirection = layoutDirection;
 }
 
-void UIApplication::setFont(const tstring &font, double pointSize) const
+void UIApplication::setFont(const FontInfo &fontInfo)
 {
-    d_ptr->font = font;
-    d_ptr->fontPointSize = pointSize;
+    d_ptr->fontInfo = fontInfo;
 }
 
-UIApplication::LayoutDirection UIApplication::layoutDirection() const
+UIApplication::LayoutDirection UIApplication::layoutDirection() const noexcept
 {
     return d_ptr->layoutDirection;
 }
 
-tstring UIApplication::font() const
+FontInfo UIApplication::font() const noexcept
 {
-    return d_ptr->font;
+    return d_ptr->fontInfo;
 }
 
-UIStyle* UIApplication::style()
+UIStyle* UIApplication::style() noexcept
 {
     return d_ptr->style;
-}
-
-double UIApplication::fontPointSize()
-{
-    return d_ptr->fontPointSize;
 }
 
 UIApplication::~UIApplication()

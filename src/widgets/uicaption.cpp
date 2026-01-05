@@ -23,7 +23,7 @@ UICaption::~UICaption()
 
 }
 
-void UICaption::setResizingAvailable(bool isResizingAvailable)
+void UICaption::setResizingAvailable(bool isResizingAvailable) noexcept
 {
     m_isResizingAvailable = isResizingAvailable;
 }
@@ -144,18 +144,18 @@ void UICaption::onPaint(const RECT &rc)
     if (m_hIcon)
         de->DrawIcon(m_hIcon);
     if (m_hEmf)
-        de->DrawEmfIcon(m_hEmf);
+        de->DrawEmfIcon(m_hEmf, iconAngle());
 #else
     if (m_hBmp)
         de->DrawIcon(m_hBmp);
     if (m_hSvg)
-        de->DrawSvgIcon(m_hSvg);
+        de->DrawSvgIcon(m_hSvg, iconAngle());
 #endif
     if (!m_text.empty())
         de->DrawString(rc, m_text, m_hFont);
 }
 
-bool UICaption::isResizingAvailable()
+bool UICaption::isResizingAvailable() const noexcept
 {
 #ifdef _WIN32
     return m_isResizingAvailable && UIUtils::winVersion() >= UIUtils::WinVer::Win10 && !IsZoomed(m_root_hWnd);

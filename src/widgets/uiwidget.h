@@ -26,19 +26,20 @@ public:
     void setDisabled(bool);
     virtual void close();
     UIWidget* parentWidget() const noexcept;
-    virtual Size size() const;
-    virtual void size(int*, int*) const;
-    virtual Point pos() const;
+    virtual Size size() const noexcept;
+    virtual void size(int*, int*) const noexcept;
+    virtual Point pos() const noexcept;
+    Point mapToGlobal(Point localPos) const;
     void updateGeometry();
-    UIGeometryAnimation* geometryAnimation();
-    void setGeometryAnimation(UIGeometryAnimation*);
-    UIDragHandler* dragHandler();
-    void setDragHandler(UIDragHandler*);
+    UIGeometryAnimation* geometryAnimation() noexcept;
+    void setGeometryAnimation(UIGeometryAnimation*) noexcept;
+    UIDragHandler* dragHandler() noexcept;
+    void setDragHandler(UIDragHandler*) noexcept;
     void applyStyle();
-    void setSizePolicy(SizePolicy::Properties, int);
-    void setFont(const tstring &font, double fontPointSize = 10);
+    void setSizePolicy(SizePolicy::Properties, int) noexcept;
+    void setFont(const FontInfo &fontInfo);
     void setBaseSize(int w, int h);
-    void setCorners(unsigned char corner);
+    void setCorners(unsigned char corner) noexcept;
     void setAcceptDrops(bool);
     void show();
     void hide();
@@ -46,17 +47,23 @@ public:
     void update();
     void bringAboveSiblings();
     void setLayout(UILayout *lut);
-    bool isCreated();
-    bool isActive();
+    bool isCreated() const noexcept;
+    bool isActive() const noexcept;
+    bool isVisible() const noexcept;
+    bool isWindow() const noexcept;
     bool underMouse();
     void grabMouse();
     void ungrabMouse();
-    int  sizePolicy(SizePolicy::Properties);
-    double dpiRatio();
+    FontInfo font() const;
+    int  sizePolicy(SizePolicy::Properties) const noexcept;
+    double dpiRatio() const noexcept;
     UILayout* layout() const noexcept;
     PlatformWindow platformWindow() const noexcept;
     UIWidget* topLevelWidget() const noexcept;
-    static UIWidget* widgetFromHwnd(UIWidget *parent, PlatformWindow);
+    static UIWidget* widgetFromPlatformWindow(UIWidget *parent, PlatformWindow);
+#ifdef _WIN32
+    void enableClipSiblings() const;
+#endif
 
     /* Signals */
     Signal<> createdSignal;
@@ -72,6 +79,7 @@ public:
 
 protected:
     friend class UIApplication;
+    friend class UIFontMetrics;
     friend class UIToolTipHandler;
     UIWidget(UIWidget *parent, ObjectType type, PlatformWindow hWindow = nullptr, const Rect &rc = Rect(CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT));
 #ifdef _WIN32
@@ -111,10 +119,9 @@ private:
     int m_size_behaviors[SizePolicy::PROPERTIES_LAST];
 
     Size    m_base_size;
-    tstring m_font;
+    FontInfo m_fontInfo;
     UIDragHandler *m_drag_handler;
     UIGeometryAnimation *m_geometry_animation;
-    double m_font_size;
     bool   m_is_created,
            m_is_active,
            m_is_destroyed,

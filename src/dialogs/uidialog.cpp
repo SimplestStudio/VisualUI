@@ -10,10 +10,9 @@ UIDialog::UIDialog(UIWidget *parent, const Rect &rc) :
     m_result(DialogCode::Rejected)
 {
 #ifdef __linux
-    gtk_window_set_type_hint(GTK_WINDOW(m_hWindow), GDK_WINDOW_TYPE_HINT_MENU);
+    gtk_window_set_type_hint(GTK_WINDOW(m_hWindow), GDK_WINDOW_TYPE_HINT_DIALOG);
     gtk_window_set_title(GTK_WINDOW(m_hWindow), "");
     gtk_window_set_resizable(GTK_WINDOW(m_hWindow), FALSE);
-    gtk_window_set_modal(GTK_WINDOW(m_hWindow), TRUE);
 
     GdkPixbuf *empty_icon = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 1, 1);
     gdk_pixbuf_fill(empty_icon, 0x00000000);
@@ -59,13 +58,29 @@ void UIDialog::reject() noexcept
     m_loop->exit();
 }
 
+void UIDialog::setModal() const noexcept
+{
+#ifdef __linux__
+    // WARNING: This method blocks popup events
+    gtk_window_set_modal(GTK_WINDOW(m_hWindow), TRUE);
+#endif
+}
+
 int UIDialog::runDialog()
 {
+#ifdef __linux__
+    // Disable parent window to simulate modal behavior without blocking popups
+    if (UIWidget *parent = parentWidget())
+        gtk_widget_set_sensitive(parent->platformWindow(), FALSE);
+#endif
     showAll();
     m_loop->exec();
 #ifdef _WIN32
     if (UIWidget *parent = parentWidget())
         EnableWindow(parent->platformWindow(), TRUE);
+#else
+    if (UIWidget *parent = parentWidget())
+        gtk_widget_set_sensitive(parent->platformWindow(), TRUE);
 #endif
     hide();
     return m_result;
@@ -127,10 +142,12 @@ bool UIDialog::event(uint ev_type, void *param)
     }
 
     case GDK_BUTTON_PRESS: {
-        return false;
+        break;
     }
 
     case GDK_DELETE: {
+        if (UIWidget *parent = parentWidget())
+            gtk_widget_set_sensitive(parent->platformWindow(), TRUE);
         if (m_loop->isRunning()) {
             reject();
             return true;

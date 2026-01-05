@@ -14,6 +14,14 @@
 # define GetBValue(rgb) ((double)((BYTE)((rgb) >> 16))/255)
 #endif
 
+namespace Ui {
+enum Style { Outline, Filled };
+#ifdef UI_STYLE_OUTLINE
+constexpr Style style = Style::Outline;
+#else
+constexpr Style style = Style::Filled;
+#endif
+}
 
 #ifdef _WIN32
 static Gdiplus::Color ColorFromColorRef(COLORREF rgb)
@@ -80,6 +88,19 @@ static void RoundedPath(cairo_t *cr, unsigned char corner, double x, double y, d
 }
 #endif
 
+static inline void GetTextMargins(Margins &mrg, const Metrics *metrics, double dpi, bool rtl) noexcept
+{
+#ifdef _WIN32
+    mrg.left = metrics->value(Metrics::TextMarginLeft) * dpi;
+    mrg.right = metrics->value(Metrics::TextMarginRight) * dpi;
+#else
+    mrg.left = (rtl ? metrics->value(Metrics::TextMarginRight) : metrics->value(Metrics::TextMarginLeft)) * dpi;
+    mrg.right = (rtl ? metrics->value(Metrics::TextMarginLeft) : metrics->value(Metrics::TextMarginRight)) * dpi;
+#endif
+    mrg.top = metrics->value(Metrics::TextMarginTop) * dpi;
+    mrg.bottom = metrics->value(Metrics::TextMarginBottom) * dpi;
+}
+
 static inline void GetIconMargins(Margins &mrg, const Metrics *metrics, double dpi, bool rtl) noexcept
 {
 #ifdef _WIN32
@@ -106,8 +127,10 @@ static inline void GetIconPlacement(Rect &rc, const Rect &src_rc, const Margins 
     if (algn & (rtl ? Metrics::AlignHRight : Metrics::AlignHLeft))
 #endif
         rc.x = mrg.left + src_rc.x;
+    else
     if (algn & Metrics::AlignHCenter)
         rc.x = mrg.left + src_rc.x + (src_rc.width - rc.width) / 2;
+    else
 #ifdef _WIN32
     if (algn & Metrics::AlignHRight)
 #else
@@ -116,8 +139,10 @@ static inline void GetIconPlacement(Rect &rc, const Rect &src_rc, const Margins 
         rc.x = src_rc.x + src_rc.width - mrg.right - rc.width;
     if (algn & Metrics::AlignVTop)
         rc.y = mrg.top + src_rc.y;
+    else
     if (algn & Metrics::AlignVCenter)
         rc.y = mrg.top + src_rc.y + (src_rc.height - rc.height) / 2;
+    else
     if (algn & Metrics::AlignVBottom)
         rc.y = src_rc.y + src_rc.height - mrg.bottom - rc.height;
 }
@@ -157,7 +182,7 @@ UIDrawingEngine::~UIDrawingEngine()
 
 }
 
-UIDrawningSurface *UIDrawingEngine::surface()
+UIDrawningSurface *UIDrawingEngine::surface() noexcept
 {
     return m_ds;
 }
@@ -230,6 +255,7 @@ void UIDrawingEngine::DrawRoundedRect(unsigned char corner, int offset, bool cle
     int width = m_rc->width - offset * 2;
     int height = m_rc->height - offset * 2;
 
+    cairo_set_operator(m_cr, CAIRO_OPERATOR_SOURCE);
     COLORREF rgb = palette->color(Palette::Background);
     cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
     RoundedPath(m_cr, corner, x, y, width, height, metrics->value(Metrics::BorderRadius));
@@ -448,14 +474,23 @@ void UIDrawingEngine::DrawCheckBox(const tstring &text, PlatformFont hFont, RECT
 
     Gdiplus::GraphicsPath ph;
     RoundedPath(ph, CornerAll, rc.X, rc.Y, rc.Width, rc.Height, metrics->value(Metrics::PrimitiveRadius) * m_dpi);
-    m_graphics->DrawPath(&pen, &ph);
+
+    if (Ui::style == Ui::Style::Outline || !checked) {
+        m_graphics->DrawPath(&pen, &ph);
+    } else {
+        Gdiplus::SolidBrush chunkBrush(ColorFromColorRef(palette->color(Palette::AlternateBase)));
+        m_graphics->FillPath(&chunkBrush, &ph);
+    }
+
     if (checked) {
-        pen.SetWidth(metrics->value(Metrics::AlternatePrimitiveWidth) * m_dpi);
+        pen.SetWidth((Ui::style == Ui::Style::Outline ? metrics->value(Metrics::AlternatePrimitiveWidth) : 1.55) * m_dpi);
         pen.SetColor(ColorFromColorRef(palette->color(Palette::AlternatePrimitive)));
+        float offset = (Ui::style == Ui::Style::Outline ? 0.0 : 1.0);
+        float rtl_offset = (Ui::style == Ui::Style::Outline ? 0.0 : 0.5);
         Gdiplus::PointF pts[3] = {
-            Gdiplus::PointF(float(x + (m_rtl ? icon_width - 3 * m_dpi : 2 * m_dpi)), float(y + icon_height/2 - 1 * m_dpi)),
-            Gdiplus::PointF(float(x + icon_width/2 + (m_rtl ? 1 * m_dpi : - 2 * m_dpi)), float(y + icon_height - 5 * m_dpi)),
-            Gdiplus::PointF(float(x + (m_rtl ? 2 * m_dpi : icon_width - 3 * m_dpi)), float(y + 4 * m_dpi))
+            Gdiplus::PointF(float(x + (m_rtl ? icon_width - (3.0 + rtl_offset) * m_dpi : (2.0 + offset) * m_dpi)), float(y + icon_height/2 - 1 * m_dpi)),
+            Gdiplus::PointF(float(x + icon_width/2 + (m_rtl ? (1.0 - rtl_offset) * m_dpi : - (2.0 - offset) * m_dpi)), float(y + icon_height - 5 * m_dpi)),
+            Gdiplus::PointF(float(x + (m_rtl ? (2.0 + rtl_offset) * m_dpi : icon_width - 3 * m_dpi)), float(y + 4 * m_dpi))
         };
         m_graphics->DrawLines(&pen, pts, 3);
     }
@@ -471,21 +506,29 @@ void UIDrawingEngine::DrawCheckBox(const tstring &text, PlatformFont hFont, RECT
     double x = m_rtl ? m_rc->width - icon_height - 1.5 : m_rc->x + 1.5;
     double y = m_rc->y + (m_rc->height - icon_height) / 2 + 0.5;
 
-    COLORREF rgb = palette->color(Palette::Primitive);
-    cairo_set_line_width(m_cr, metrics->value(Metrics::PrimitiveWidth));
-    cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
-
     check_rc = Rect(x, y, icon_width - 1, icon_height - 1);
     RoundedPath(m_cr, CornerAll, x, y, check_rc.width, check_rc.height, metrics->value(Metrics::PrimitiveRadius));
-    cairo_stroke(m_cr);
+
+    if (Ui::style == Ui::Style::Outline || !checked) {
+        COLORREF rgb = palette->color(Palette::Primitive);
+        cairo_set_line_width(m_cr, metrics->value(Metrics::PrimitiveWidth));
+        cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
+        cairo_stroke(m_cr);
+    } else {
+        COLORREF rgb = palette->color(Palette::AlternateBase);
+        cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
+        cairo_fill(m_cr);
+    }
+
     if (checked) {
-        rgb = palette->color(Palette::AlternatePrimitive);
-        cairo_set_line_width(m_cr, metrics->value(Metrics::AlternatePrimitiveWidth));
+        COLORREF rgb = palette->color(Palette::AlternatePrimitive);
+        cairo_set_line_width(m_cr, (Ui::style == Ui::Style::Outline ? metrics->value(Metrics::AlternatePrimitiveWidth) : 1.55) * m_dpi);
         cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
 
-        cairo_move_to(m_cr, x + 2, y + icon_height/2 - 1);
-        cairo_line_to(m_cr, x + icon_width/2 - 2, y + icon_height - 5);
-        cairo_line_to(m_cr, x + icon_width - 3, y + 4);
+        float offset = (Ui::style == Ui::Style::Outline ? 0.0 : 0.5);
+        cairo_move_to(m_cr, x + (2 + offset), y + icon_height/2 - 1);
+        cairo_line_to(m_cr, x + icon_width/2 - (2 - offset), y + icon_height - 5);
+        cairo_line_to(m_cr, x + icon_width - (3 + offset), y + 4);
         cairo_stroke(m_cr);
     }
     if (!text.empty()) {
@@ -515,11 +558,18 @@ void UIDrawingEngine::DrawRadioButton(const tstring &text, PlatformFont hFont, R
     check_rc.right = x + icon_width - 1;
     check_rc.bottom = y + icon_height - 1;
 
-    Gdiplus::Pen pen(ColorFromColorRef(palette->color(Palette::Primitive)), metrics->value(Metrics::PrimitiveWidth) * m_dpi);
-    m_graphics->DrawEllipse(&pen, x, y, icon_height - 1, icon_height - 1);
+    if (Ui::style == Ui::Style::Outline || !checked) {
+        Gdiplus::Pen pen(ColorFromColorRef(palette->color(Palette::Primitive)), metrics->value(Metrics::PrimitiveWidth) * m_dpi);
+        m_graphics->DrawEllipse(&pen, x, y, icon_height - 1, icon_height - 1);
+    } else {
+        Gdiplus::SolidBrush chunkBrush(ColorFromColorRef(palette->color(Palette::AlternateBase)));
+        m_graphics->FillEllipse(&chunkBrush, x, y, icon_height - 1, icon_height - 1);
+    }
+
     if (checked) {
+        float offset = (Ui::style == Ui::Style::Outline ? 2.7f : 3.5f) * m_dpi;
         Gdiplus::SolidBrush chunkBrush(ColorFromColorRef(palette->color(Palette::AlternatePrimitive)));
-        m_graphics->FillEllipse(&chunkBrush, float(x) + float(2.7f * m_dpi), float(y) + float(2.7f * m_dpi), float(icon_height) - 5.4f * m_dpi - 1.0f, float(icon_height) - 5.4f * m_dpi - 1.0f);
+        m_graphics->FillEllipse(&chunkBrush, float(x) + offset, float(y) + offset, float(icon_height) - 2*offset - 1.0f, float(icon_height) - 2*offset - 1.0f);
     }
 
     if (!text.empty()) {
@@ -533,17 +583,27 @@ void UIDrawingEngine::DrawRadioButton(const tstring &text, PlatformFont hFont, R
     double x = m_rtl ? m_rc->width - icon_height - 1.5 : m_rc->x + 1.5;
     double y = m_rc->y + (m_rc->height - icon_height) / 2 + 0.5;
 
-    COLORREF rgb = palette->color(Palette::Primitive);
-    cairo_set_line_width(m_cr, metrics->value(Metrics::PrimitiveWidth));
-    cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
-
     check_rc = Rect(x, y, icon_width, icon_height);
-    cairo_arc(m_cr, double(x) + double(icon_height)/2, double(y) + double(icon_height)/2, double(icon_height)/2, 0, 2 * G_PI);
-    cairo_stroke(m_cr);
-    if (checked) {
-        rgb = palette->color(Palette::AlternatePrimitive);
+
+    if (Ui::style == Ui::Style::Outline || !checked) {
+        COLORREF rgb = palette->color(Palette::Primitive);
+        cairo_set_line_width(m_cr, metrics->value(Metrics::PrimitiveWidth));
         cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
-        cairo_arc(m_cr, double(x) + double(icon_height)/2, double(y) + double(icon_height)/2, double(icon_height)/2 - 2.7, 0, 2 * G_PI);
+        cairo_arc(m_cr, double(x) + double(icon_height)/2, double(y) + double(icon_height)/2, double(icon_height)/2, 0, 2 * G_PI);
+        cairo_stroke(m_cr);
+
+    } else {
+        COLORREF rgb = palette->color(Palette::AlternateBase);
+        cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
+        cairo_arc(m_cr, double(x) + double(icon_height)/2, double(y) + double(icon_height)/2, double(icon_height)/2, 0, 2 * G_PI);
+        cairo_fill(m_cr);
+    }
+
+    if (checked) {
+        float rad = (Ui::style == Ui::Style::Outline ? 2.7f : 3.5f) * m_dpi;
+        COLORREF rgb = palette->color(Palette::AlternatePrimitive);
+        cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
+        cairo_arc(m_cr, double(x) + double(icon_height)/2, double(y) + double(icon_height)/2, double(icon_height)/2 - rad, 0, 2 * G_PI);
         cairo_fill(m_cr);
     }
     if (!text.empty()) {
@@ -716,36 +776,40 @@ void UIDrawingEngine::DrawProgressBar(int progress, int pulse_pos) const noexcep
 #endif
 }
 
-void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline, RECT *bounds)
+void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline)
 {
     const Metrics *metrics = m_ds->metrics();
-    int mrg_top = metrics->value(Metrics::TextMarginTop) * m_dpi;
-    int mrg_left = (m_rtl ? metrics->value(Metrics::TextMarginRight) : metrics->value(Metrics::TextMarginLeft)) * m_dpi;
-    int mrg_right = (m_rtl ? metrics->value(Metrics::TextMarginLeft) : metrics->value(Metrics::TextMarginRight)) * m_dpi;
-    int mrg_bottom = metrics->value(Metrics::TextMarginBottom) * m_dpi;
+    Margins mrg;
+    GetTextMargins(mrg, metrics, m_dpi, m_rtl);
 #ifdef _WIN32
-    m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
     m_graphics->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
 
     LOGFONTW logFont = {0};
     GetObject(hFont, sizeof(LOGFONTW), &logFont);
     Gdiplus::Font font(m_hdc, &logFont);
-    Gdiplus::RectF rcF(rc.left + mrg_left, rc.top + mrg_top, rc.right - rc.left - mrg_right - mrg_left, rc.bottom - rc.top - mrg_bottom - mrg_top);
-    Gdiplus::StringAlignment h_algn, v_algn;
+    Gdiplus::RectF rcF(rc.left + mrg.left, rc.top + mrg.top, rc.right - rc.left - mrg.right - mrg.left, rc.bottom - rc.top - mrg.bottom - mrg.top);
+
+    Gdiplus::StringAlignment h_algn = Gdiplus::StringAlignmentNear, v_algn = Gdiplus::StringAlignmentNear;
     UINT algn = metrics->value(Metrics::TextAlignment);
-    if (algn & Metrics::AlignHLeft)
-        h_algn = Gdiplus::StringAlignmentNear;
+    // if (algn & Metrics::AlignHLeft)
+    //     h_algn = Gdiplus::StringAlignmentNear;
+    // else
     if (algn & Metrics::AlignHCenter)
         h_algn = Gdiplus::StringAlignmentCenter;
+    else
     if (algn & Metrics::AlignHRight)
         h_algn = Gdiplus::StringAlignmentFar;
-    if (algn & Metrics::AlignVTop)
-        v_algn = Gdiplus::StringAlignmentNear;
+
+    // if (algn & Metrics::AlignVTop)
+    //     v_algn = Gdiplus::StringAlignmentNear;
+    // else
     if (algn & Metrics::AlignVCenter)
         v_algn = Gdiplus::StringAlignmentCenter;
+    else
     if (algn & Metrics::AlignVBottom)
         v_algn = Gdiplus::StringAlignmentFar;
-    Gdiplus::StringFormat strFmt;
+
+    Gdiplus::StringFormat strFmt(Gdiplus::StringFormat::GenericTypographic());
     strFmt.SetAlignment(h_algn);
     strFmt.SetLineAlignment(v_algn);
     INT flags = multiline ? Gdiplus::StringFormatFlagsLineLimit : Gdiplus::StringFormatFlagsNoWrap;
@@ -758,39 +822,39 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
             m_graphics->SetTransform(&rtlMatrix);
         }
     }
-    strFmt.SetFormatFlags(flags);
+    strFmt.SetFormatFlags(strFmt.GetFormatFlags() | flags);
+
     Gdiplus::SolidBrush brush(ColorFromColorRef(m_ds->palette()->color(Palette::Text)));
     m_graphics->DrawString(text.c_str(), -1, &font, rcF, &strFmt, &brush);
-    if (bounds) {
-        Gdiplus::CharacterRange range(0, text.length());
-        strFmt.SetFormatFlags(strFmt.GetFormatFlags() | Gdiplus::StringFormatFlagsMeasureTrailingSpaces);
-        strFmt.SetMeasurableCharacterRanges(1, &range);
-        Gdiplus::Region rgn;
-        m_graphics->MeasureCharacterRanges(text.c_str(), text.length(), &font, rcF, &strFmt, 1, &rgn);
-        Gdiplus::RectF bnds;
-        rgn.GetBounds(&bnds, m_graphics);
-        bounds->left = bnds.X;
-        bounds->top = bnds.Y;
-        bounds->right = round(bnds.X + bnds.Width);
-        bounds->bottom = round(bnds.Y + bnds.Height);
-    }
-    m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeDefault);
+
     if (m_rtl && m_origMatrix) {
         m_graphics->SetTransform(m_origMatrix);
         delete m_origMatrix;
         m_origMatrix = nullptr;
     }
 #else
-    Rect _rc(rc.x + mrg_left, rc.y + mrg_top, rc.width - mrg_right - mrg_left, rc.height - mrg_bottom - mrg_top);
+    Rect _rc(rc.x + mrg.left, rc.y + mrg.top, rc.width - mrg.right - mrg.left, rc.height - mrg.bottom - mrg.top);
 
-    COLORREF rgb = m_ds->palette()->color(Palette::Text);
-    cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
     PangoLayout *lut = pango_cairo_create_layout(m_cr);
     pango_layout_set_text(lut, text.c_str(), -1);
-    pango_layout_set_font_description(lut, hFont);
+    pango_layout_set_font_description(lut, hFont->desc);
     pango_layout_set_wrap(lut, PANGO_WRAP_WORD);
     pango_layout_set_width(lut, multiline ? _rc.width * PANGO_SCALE : -1);
     pango_layout_set_height(lut, _rc.height * PANGO_SCALE);
+
+    if (hFont->underline || hFont->strikeOut) {
+        PangoAttrList* attrs = pango_attr_list_new();
+        if (hFont->underline) {
+            PangoAttribute* underline = pango_attr_underline_new(PANGO_UNDERLINE_SINGLE);
+            pango_attr_list_insert(attrs, underline);
+        }
+        if (hFont->strikeOut) {
+            PangoAttribute* strike = pango_attr_strikethrough_new(TRUE);
+            pango_attr_list_insert(attrs, strike);
+        }
+        pango_layout_set_attributes(lut, attrs);
+        pango_attr_list_unref(attrs);
+    }
 
     int txt_w, txt_h;
     pango_layout_get_size(lut, &txt_w, &txt_h);
@@ -803,21 +867,24 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
     int algn = metrics->value(Metrics::TextAlignment);
     if (algn & (m_rtl ? Metrics::AlignHRight : Metrics::AlignHLeft)) {
         h_algn = PANGO_ALIGN_LEFT;
-    }
+    } else
     if (algn & Metrics::AlignHCenter) {
         h_algn = PANGO_ALIGN_CENTER;
         if (!multiline)
             text_x += round((_rc.width - txt_w) / 2.0);
-    }
+    } else
     if (algn & (m_rtl ? Metrics::AlignHLeft : Metrics::AlignHRight)) {
         h_algn = PANGO_ALIGN_RIGHT;
         if (!multiline)
             text_x += _rc.width - txt_w;
     }
+
     if (algn & Metrics::AlignVTop)
         text_y += 0;
+    else
     if (algn & Metrics::AlignVCenter)
         text_y += round((_rc.height - txt_h) / 2.0);
+    else
     if (algn & Metrics::AlignVBottom)
         text_y += _rc.height - txt_h;
 
@@ -826,15 +893,167 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
     cairo_rectangle(m_cr, text_x, text_y, _rc.width, _rc.height);
     cairo_clip(m_cr);
     cairo_move_to(m_cr, text_x, text_y);
+
+    COLORREF rgb = m_ds->palette()->color(Palette::Text);
+    cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
     pango_cairo_show_layout(m_cr, lut);
+
     cairo_restore(m_cr);
     g_object_unref(lut);
-    if (bounds) {
-        bounds->x = text_x;
-        bounds->y = text_y;
-        bounds->width = txt_w;
-        bounds->height = txt_h;
+#endif
+}
+
+void UIDrawingEngine::DrawStringWithLayout(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline, int scrollOffsetX)
+{
+    const Metrics *metrics = m_ds->metrics();
+    Margins mrg;
+    GetTextMargins(mrg, metrics, m_dpi, m_rtl);
+#ifdef _WIN32
+    m_graphics->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
+
+    LOGFONTW logFont = {0};
+    GetObject(hFont, sizeof(LOGFONTW), &logFont);
+    Gdiplus::Font font(m_hdc, &logFont);
+    Gdiplus::RectF rcF(rc.left + mrg.left, rc.top + mrg.top, rc.right - rc.left - mrg.right - mrg.left, rc.bottom - rc.top - mrg.bottom - mrg.top);
+
+    if (m_rtl && !m_root_is_layered) {
+        m_origMatrix = new Gdiplus::Matrix;
+        m_graphics->GetTransform(m_origMatrix);
+        Gdiplus::Matrix rtlMatrix(-1.0f, 0.0f, 0.0f, 1.0f, float(m_rc->right + m_rc->left - 1), 0.0f);
+        m_graphics->SetTransform(&rtlMatrix);
     }
+
+    HDC hdc = GetDC(m_hwnd);
+    HGDIOBJ oldFont = SelectObject(hdc, hFont);
+
+    TEXTMETRICW tm = {0};
+    GetTextMetricsW(hdc, &tm);
+    float baselineOffset = (float)tm.tmAscent;
+    int lineSpacing = tm.tmHeight + tm.tmExternalLeading;
+    float x = rcF.X;
+    float y = rcF.Y;
+    float width = 0;
+    float height = tm.tmHeight;
+    int len = text.length();
+
+    std::vector<int> dx(len);
+
+    GCP_RESULTS gcp = {0};
+    gcp.lStructSize = sizeof(gcp);
+    gcp.lpDx = dx.data();
+    gcp.nGlyphs = (UINT)dx.size();
+
+    GetCharacterPlacementW(hdc, text.c_str(), len, 0, &gcp, GCP_LIGATE | GCP_DIACRITIC);
+
+    SelectObject(hdc, oldFont);
+    ReleaseDC(m_hwnd, hdc);    
+
+    UINT algn = metrics->value(Metrics::TextAlignment);
+    // if (algn & Metrics::AlignHCenter) {
+    //     if (!multiline)
+    //         x += round((rcF.Width - width) / 2.0);
+    // } else
+    // if (algn & Metrics::AlignHRight) {
+    //     if (!multiline)
+    //         x += rcF.Width - width;
+    // }
+
+    if (algn & Metrics::AlignVCenter) {
+        y += round((rcF.Height - height) / 2.0);
+    } else
+    if (algn & Metrics::AlignVBottom) {
+        y += rcF.Height - height;
+    }
+
+    std::vector<Gdiplus::PointF> positions(len);
+    float posX = x + scrollOffsetX;
+    float posY = y + baselineOffset;
+       
+    for (size_t i = 0; i < len; ++i) {
+        positions[i] = Gdiplus::PointF(posX, posY);
+        posX += (float)dx[i];
+    }
+
+    Gdiplus::GraphicsState state = m_graphics->Save();
+    m_graphics->SetClip(rcF);
+
+    Gdiplus::SolidBrush brush(ColorFromColorRef(m_ds->palette()->color(Palette::Text)));
+    m_graphics->DrawDriverString((const UINT16*)text.c_str(), (INT)len, &font, &brush,
+                                 positions.data(), Gdiplus::DriverStringOptionsCmapLookup, nullptr);
+
+    m_graphics->Restore(state);
+    if (m_rtl && m_origMatrix) {
+        m_graphics->SetTransform(m_origMatrix);
+        delete m_origMatrix;
+        m_origMatrix = nullptr;
+    }
+#else
+    Rect _rc(rc.x + mrg.left, rc.y + mrg.top, rc.width - mrg.right - mrg.left, rc.height - mrg.bottom - mrg.top);
+
+    PangoLayout *lut = pango_cairo_create_layout(m_cr);
+    pango_layout_set_text(lut, text.c_str(), -1);
+    pango_layout_set_font_description(lut, hFont->desc);
+    pango_layout_set_wrap(lut, PANGO_WRAP_WORD);
+    pango_layout_set_width(lut, multiline ? _rc.width * PANGO_SCALE : -1);
+    pango_layout_set_height(lut, _rc.height * PANGO_SCALE);
+
+    if (hFont->underline || hFont->strikeOut) {
+        PangoAttrList* attrs = pango_attr_list_new();
+        if (hFont->underline) {
+            PangoAttribute* underline = pango_attr_underline_new(PANGO_UNDERLINE_SINGLE);
+            pango_attr_list_insert(attrs, underline);
+        }
+        if (hFont->strikeOut) {
+            PangoAttribute* strike = pango_attr_strikethrough_new(TRUE);
+            pango_attr_list_insert(attrs, strike);
+        }
+        pango_layout_set_attributes(lut, attrs);
+        pango_attr_list_unref(attrs);
+    }
+
+    int x = _rc.x;
+    int y = _rc.y;
+    int width, height;
+    pango_layout_get_size(lut, &width, &height);
+    width /= PANGO_SCALE;
+    height /= PANGO_SCALE;
+
+    PangoAlignment h_algn = PANGO_ALIGN_LEFT;
+    int algn = metrics->value(Metrics::TextAlignment);
+    if (algn & (m_rtl ? Metrics::AlignHRight : Metrics::AlignHLeft)) {
+        h_algn = PANGO_ALIGN_LEFT;
+    } else
+    if (algn & Metrics::AlignHCenter) {
+        h_algn = PANGO_ALIGN_CENTER;
+        if (!multiline)
+            x += round((_rc.width - width) / 2.0);
+    } else
+    if (algn & (m_rtl ? Metrics::AlignHLeft : Metrics::AlignHRight)) {
+        h_algn = PANGO_ALIGN_RIGHT;
+        if (!multiline)
+            x += _rc.width - width;
+    }
+
+    if (algn & Metrics::AlignVCenter)
+        y += round((_rc.height - height) / 2.0);
+    else
+    if (algn & Metrics::AlignVBottom)
+        y += _rc.height - height;
+
+    pango_layout_set_alignment(lut, h_algn);
+
+    cairo_save(m_cr);
+    cairo_rectangle(m_cr, x, y, _rc.width, _rc.height);
+    cairo_clip(m_cr);
+    cairo_translate(m_cr, scrollOffsetX, 0);
+    cairo_move_to(m_cr, x, y);
+
+    COLORREF rgb = m_ds->palette()->color(Palette::Text);
+    cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
+    pango_cairo_show_layout(m_cr, lut);
+
+    cairo_restore(m_cr);
+    g_object_unref(lut);
 #endif
 }
 
@@ -945,7 +1164,7 @@ void UIDrawingEngine::DrawTopBorder(int brdWidth, COLORREF brdColor) const
     DeleteObject(pen);
 }
 
-void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf) noexcept
+void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf, float angle) noexcept
 {
     const Metrics *metrics = m_ds->metrics();
     Margins mrg;
@@ -955,20 +1174,32 @@ void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf) noexcept
     m_graphics->SetInterpolationMode(Gdiplus::InterpolationModeHighQuality);
     m_graphics->SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
     m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
-    if (m_rtl) {
-        if (!m_root_is_layered) {
-            m_origMatrix = new Gdiplus::Matrix;
-            m_graphics->GetTransform(m_origMatrix);
-            Gdiplus::Matrix rtlMatrix(-1.0f, 0.0f, 0.0f, 1.0f, float(m_rc->right + m_rc->left - 1), 0.0f);
-            m_graphics->SetTransform(&rtlMatrix);
-        }
+
+    m_origMatrix = new Gdiplus::Matrix;
+    m_graphics->GetTransform(m_origMatrix);
+
+    float centerX = dst_rc.x + dst_rc.width / 2.0f;
+    float centerY = dst_rc.y + dst_rc.height / 2.0f;
+
+    Gdiplus::Matrix transformMatrix;
+    if (m_rtl && !m_root_is_layered) {
+        transformMatrix.Translate(centerX, centerY);
+        transformMatrix.Rotate(angle);
+        transformMatrix.Translate(-centerX, -centerY);
+
+        Gdiplus::Matrix rtlMatrix(-1.0f, 0.0f, 0.0f, 1.0f, float(m_rc->right + m_rc->left - 1), 0.0f);
+        transformMatrix.Multiply(&rtlMatrix, Gdiplus::MatrixOrderPrepend);
+    } else {
+        transformMatrix.Translate(centerX, centerY);
+        transformMatrix.Rotate(angle);
+        transformMatrix.Translate(-centerX, -centerY);
     }
+    m_graphics->SetTransform(&transformMatrix);
     m_graphics->DrawImage(hEmf, dst_rc.x, dst_rc.y, dst_rc.width, dst_rc.height);
-    if (m_rtl && m_origMatrix) {
-        m_graphics->SetTransform(m_origMatrix);
-        delete m_origMatrix;
-        m_origMatrix = nullptr;
-    }
+    m_graphics->SetTransform(m_origMatrix);
+    delete m_origMatrix;
+    m_origMatrix = nullptr;
+
     m_graphics->SetInterpolationMode(Gdiplus::InterpolationModeDefault);
     m_graphics->SetPixelOffsetMode(Gdiplus::PixelOffsetModeDefault);
     m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeDefault);
@@ -1122,7 +1353,7 @@ void UIDrawingEngine::Begin(UIDrawningSurface *ds, cairo_t *cr, Rect *rc) noexce
     m_rc = rc;
 }
 
-void UIDrawingEngine::DrawSvgIcon(_RsvgHandle *hSvg) const noexcept
+void UIDrawingEngine::DrawSvgIcon(_RsvgHandle *hSvg, float angle) const noexcept
 {
     const Metrics *metrics = m_ds->metrics();
     Margins mrg;
@@ -1134,6 +1365,12 @@ void UIDrawingEngine::DrawSvgIcon(_RsvgHandle *hSvg) const noexcept
     rsvg_handle_get_dimensions(hSvg, &dm);
 
     cairo_save(m_cr);
+    double center_x = dst_rc.x + dst_rc.width / 2.0;
+    double center_y = dst_rc.y + dst_rc.height / 2.0;
+    cairo_translate(m_cr, center_x, center_y);
+    cairo_rotate(m_cr, angle * M_PI / 180.0);
+    cairo_translate(m_cr, -center_x, -center_y);
+
     cairo_translate(m_cr, dst_rc.x, dst_rc.y);
     cairo_scale(m_cr, (double)dst_rc.width / dm.width, (double)dst_rc.height / dm.height);
     rsvg_handle_render_cairo(hSvg, m_cr);

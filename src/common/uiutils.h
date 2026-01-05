@@ -16,12 +16,12 @@ namespace UIUtils
     enum WinVer : BYTE {
         Undef, WinXP, WinVista, Win7, Win8, Win8_1, Win10, Win11, WinFuture
     };
-    WinVer DECL_VISUALUI winVersion() noexcept;
-    std::wstring DECL_VISUALUI currentUserSID();
-    DWORD DECL_VISUALUI regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value);
-    void DECL_VISUALUI loadImageResource(Gdiplus::Bitmap* &hBmp, int id, LPCWSTR type);
-    void DECL_VISUALUI loadEmfResource(Gdiplus::Metafile* &hBmp, int id, LPCWSTR type);
-    void DECL_VISUALUI loadStringResource(tstring &str, int id);
+    DECL_VISUALUI WinVer winVersion() noexcept;
+    DECL_VISUALUI std::wstring currentUserSID();
+    DECL_VISUALUI DWORD regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value, bool *success = nullptr);
+    DECL_VISUALUI void loadImageResource(Gdiplus::Bitmap* &hBmp, int id, LPCWSTR type);
+    DECL_VISUALUI void loadEmfResource(Gdiplus::Metafile* &hBmp, int id, LPCWSTR type);
+    DECL_VISUALUI void loadStringResource(tstring &str, int id);
 #else
     enum class DesktopEnv : unsigned char {
         UNDEF, UNITY, GNOME, KDE, XFCE, CINNAMON, OTHER
@@ -29,20 +29,25 @@ namespace UIUtils
     enum class WindowServer : unsigned char {
         UNDEF, X11, WAYLAND, OTHER
     };
-    DesktopEnv DECL_VISUALUI desktopEnv();
-    WindowServer DECL_VISUALUI windowServer();
-    void DECL_VISUALUI loadStringResource(tstring &str, GResource *res, const char *resourcePath);
+    DECL_VISUALUI DesktopEnv desktopEnv();
+    DECL_VISUALUI WindowServer windowServer();
+    DECL_VISUALUI void loadStringResource(tstring &str, GResource *res, const char *resourcePath);
 #endif
-    // Checks whether `addr` points to a block allocated on the process heap.
+
+};
+
+namespace UIMemory
+{
+    // Checks whether `addr` points to a block on the process stack.
     // Used before freeing memory to avoid accessing invalid or foreign memory regions.
-    bool isAllocOnHeap(void *addr);
+    bool isOnStack(void *addr);
 };
 
 namespace UIScreen
 {
 #ifdef _WIN32
-    double DECL_VISUALUI dpiAtPoint(const POINT &pt);
-    double DECL_VISUALUI dpiAtRect(const RECT &rc);
+    DECL_VISUALUI double dpiAtPoint(const POINT &pt);
+    DECL_VISUALUI double dpiAtRect(const RECT &rc);
 #else
 #endif
 };
@@ -50,16 +55,16 @@ namespace UIScreen
 namespace UILocalization
 {
 #ifdef _WIN32
-bool DECL_VISUALUI isRtlLanguage(unsigned long lcid);
+DECL_VISUALUI bool isRtlLanguage(unsigned long lcid);
 #else
-bool DECL_VISUALUI isRtlLanguage(const char *locale);
+DECL_VISUALUI bool isRtlLanguage(const char *locale);
 #endif
 };
 
 namespace UIUnicode
 {
 #ifdef _WIN32
-std::wstring DECL_VISUALUI utf8ToWStr(const std::string &str);
+DECL_VISUALUI std::wstring utf8ToWStr(const std::string &str);
 #endif
 // NOTE:
 //  On Windows: 'pos' is an index in wchar_t units (UTF-16 code units).
@@ -69,19 +74,19 @@ std::wstring DECL_VISUALUI utf8ToWStr(const std::string &str);
 
 // Returns the length of the character starting at position 'pos'.
 // NOTE: See above for meaning of 'pos' on Windows vs Linux.
-size_t DECL_VISUALUI charLenAt(const tstring &str, size_t pos) noexcept;
+DECL_VISUALUI size_t charLenAt(const tstring &str, size_t pos) noexcept;
 
 // Returns the length of the character immediately before position 'pos'.
 // NOTE: See above for meaning of 'pos' on Windows vs Linux.
-size_t DECL_VISUALUI charLenBefore(const tstring &str, size_t pos) noexcept;
+DECL_VISUALUI size_t charLenBefore(const tstring &str, size_t pos) noexcept;
 
 // Returns the position of the previous character relative to 'pos'.
 // NOTE: See above for meaning of 'pos' on Windows vs Linux.
-size_t DECL_VISUALUI charPrevPos(const tstring &str, size_t pos) noexcept;
+DECL_VISUALUI size_t charPrevPos(const tstring &str, size_t pos) noexcept;
 
 // Returns the position of the next character relative to 'pos'.
 // NOTE: See above for meaning of 'pos' on Windows vs Linux.
-size_t DECL_VISUALUI charNextPos(const tstring &str, size_t pos) noexcept;
+DECL_VISUALUI size_t charNextPos(const tstring &str, size_t pos) noexcept;
 };
 
 #endif // UIUTILS_H

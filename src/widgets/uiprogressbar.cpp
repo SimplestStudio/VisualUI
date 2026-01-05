@@ -53,7 +53,7 @@ void UIProgressBar::pulse(bool enable)
     }
 }
 
-void UIProgressBar::setPulseStep(int step)
+void UIProgressBar::setPulseStep(int step) noexcept
 {
     if (step < 1)
         step = 1;

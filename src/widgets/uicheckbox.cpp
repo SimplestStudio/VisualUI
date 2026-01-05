@@ -17,23 +17,13 @@ UICheckBox::~UICheckBox()
 
 }
 
-void UICheckBox::setChecked(bool checked)
-{
-    m_checked = checked;
-    update();
-}
-
-bool UICheckBox::isChecked()
-{
-    return m_checked;
-}
-
 #ifdef _WIN32
 bool UICheckBox::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 {
     switch (msg) {
     case WM_LBUTTONDOWN: {
         if (!m_disabled) {
+            *result = UIWidget::event(msg, wParam, lParam, result);
             palette()->setCurrentState(Palette::Pressed);
             repaint();
         }
@@ -88,7 +78,8 @@ void UICheckBox::onPaint(const RECT&)
 {
     engine()->DrawCheckBox(m_text, m_hFont, m_check_rc, m_checked);
 #ifdef __linux__
-    updateInputRegion(m_check_rc);
+    if (m_restrictedClickArea)
+        updateInputRegion(m_check_rc);
 #endif
 }
 

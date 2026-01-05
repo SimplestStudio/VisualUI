@@ -23,8 +23,8 @@ public:
     UIPixmap& operator=(const UIPixmap &other);
     UIPixmap& operator=(UIPixmap &&other) noexcept;
 
-    bool isValid() const;
-    Size imageSize() const;
+    bool isValid() const noexcept;
+    Size imageSize() const noexcept;
     UIPixmap scaled(int width, int height) const;
 
 protected:

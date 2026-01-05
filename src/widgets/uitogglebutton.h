@@ -11,7 +11,7 @@ public:
     ~UIToggleButton();
 
     void setChecked(bool checked);
-    bool isChecked();
+    bool isChecked() const noexcept;
 
     /* callback */
 

@@ -83,13 +83,14 @@
   </Widget>
   <Widget id="Selector">
     <SizePolicy HSizeBehavior="Expanding" VSizeBehavior="Fixed"/>
-    <Metrics BorderRadius="8" IconWidth="16" IconHeight="16" PrimitiveWidth="1" PrimitiveRadius="1" AlternatePrimitiveWidth="2" TextMarginLeft="22"/>
+    <Metrics BorderRadius="8" IconWidth="16" IconHeight="16" PrimitiveWidth="1" PrimitiveRadius="3" AlternatePrimitiveWidth="2" TextMarginLeft="22"/>
     <BaseSize width="140" height="24"/>
     <Color background="CONTENT_BKG" hover="CONTENT_BKG" pressed="CONTENT_BKG"/>
     <Color base="CONTENT_BKG" hover="CONTENT_BKG" pressed="CONTENT_BKG"/>
+    <Color alternateBase="SELECTOR_SELECTED_FILL" hover="SELECTOR_SELECTED_FILL" pressed="SELECTOR_SELECTED_FILL" disabled="SELECTOR_SELECTED_FILL_DISABLED"/>
     <Color text="TEXT_NORMAL" hover="TEXT_NORMAL" pressed="TEXT_NORMAL"/>
-    <Color primitive="#5a6270" hover="#5a6270" pressed="#5a6270"/>
-    <Color alternatePrimitive="TEXT_NORMAL" hover="TEXT_NORMAL" pressed="TEXT_NORMAL"/>
+    <Color primitive="SELECTOR_NORMAL" hover="SELECTOR_HOVER" pressed="SELECTOR_PRESSED" disabled="SELECTOR_DISABLED"/>
+    <Color alternatePrimitive="SELECTOR_CHECK" hover="SELECTOR_CHECK" pressed="SELECTOR_CHECK" disabled="SELECTOR_CHECK_DISABLED"/>
   </Widget>
   <Widget id="ProgressBar">
     <SizePolicy HSizeBehavior="Fixed" VSizeBehavior="Fixed"/>

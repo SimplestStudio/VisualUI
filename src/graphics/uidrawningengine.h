@@ -29,7 +29,7 @@ public:
         CornerAll  = CornerLTop | CornerRTop | CornerLBottom | CornerRBottom
     };
 
-    UIDrawningSurface *surface();
+    UIDrawningSurface *surface() noexcept;
     void DrawFlatRect(bool clearBkg = true) const noexcept;
     void DrawRoundedRect(unsigned char corner, int offset = 0, bool clearBkg = true) const noexcept;
     void DrawStockCloseIcon() const;
@@ -40,13 +40,14 @@ public:
     void DrawRadioButton(const tstring &text, PlatformFont hFont, RECT &check_rc, bool checked = false) noexcept;
     void DrawToggleButton(const tstring &text, PlatformFont hFont, RECT &check_rc, bool checked = false) noexcept;
     void DrawProgressBar(int progress, int pulse_pos) const noexcept;
-    void DrawString(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline = false, RECT *bounds = nullptr);
+    void DrawString(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline = false);
+    void DrawStringWithLayout(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline = false, int scrollOffsetX = 0);
     void DrawIcon(PlatformIcon hIcon) const;
     void DrawShadow() const noexcept;
 #ifdef _WIN32
     void Begin(UIDrawningSurface*, HWND, RECT *rc, double dpi = 1.0);
     void DrawTopBorder(int, COLORREF) const;
-    void DrawEmfIcon(Gdiplus::Metafile *hEmf) noexcept;
+    void DrawEmfIcon(Gdiplus::Metafile *hEmf, float angle = 0) noexcept;
     void DrawImage(Gdiplus::Bitmap *hBmp) const noexcept;
     void End() noexcept;
 
@@ -57,7 +58,7 @@ public:
     void LayeredChildEnd() noexcept;
 #else
     void Begin(UIDrawningSurface*, cairo_t*, Rect *rc) noexcept;
-    void DrawSvgIcon(_RsvgHandle *hSvg) const noexcept;
+    void DrawSvgIcon(_RsvgHandle *hSvg, float angle = 0) const noexcept;
     void End() noexcept;
 #endif
 

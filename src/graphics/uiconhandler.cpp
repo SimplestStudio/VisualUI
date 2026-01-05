@@ -1,6 +1,7 @@
 #include "uiconhandler.h"
 #include "uimetrics.h"
 #include "uiwidget.h"
+#include "uiscalaranimation.h"
 #ifdef _WIN32
 # include "uiutils.h"
 #else
@@ -16,13 +17,19 @@ UIconHandler::UIconHandler(UIWidget *owner) :
 #else
     m_hSvg(nullptr),
 #endif
-    m_owner(owner)
+    m_owner(owner),
+    m_rotate_animation(nullptr),
+    m_angle(0.0)
 {
 
 }
 
 UIconHandler::~UIconHandler()
 {
+    if (m_rotate_animation) {
+        m_rotate_animation->stopAnimation();
+        delete m_rotate_animation; m_rotate_animation = nullptr;
+    }
 #ifdef _WIN32
     if (m_hIcon) {
         DestroyIcon(m_hIcon);
@@ -236,4 +243,27 @@ void UIconHandler::setIconSize(int w, int h)
     m_owner->metrics()->setMetrics(Metrics::IconWidth, w);
     m_owner->metrics()->setMetrics(Metrics::IconHeight, h);
     m_owner->update();
+}
+
+UIScalarAnimation *UIconHandler::iconRotateAnimation() const noexcept
+{
+    return m_rotate_animation;
+}
+
+void UIconHandler::setIconRotateAnimation(UIScalarAnimation *rotate_animation)
+{
+    m_rotate_animation = rotate_animation;
+    m_rotate_animation->onValueChanged([this](double) {
+        m_owner->update();
+    });
+}
+
+double UIconHandler::iconAngle() const
+{
+    return m_rotate_animation ? m_rotate_animation->currentValue() : m_angle;
+}
+
+void UIconHandler::setIconAngle(double angle) noexcept
+{
+    m_angle = angle;
 }

@@ -82,12 +82,12 @@ void UIOpacityAnimation::stopAnimation()
     pimpl->timer->stop();
 }
 
-bool UIOpacityAnimation::isFadingOut() const
+bool UIOpacityAnimation::isFadingOut() const noexcept
 {
     return pimpl->fadeOut;
 }
 
-int UIOpacityAnimation::opacity() const
+int UIOpacityAnimation::opacity() const noexcept
 {
     return pimpl->opacity;
 }

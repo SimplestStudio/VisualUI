@@ -17,17 +17,6 @@ UIRadioButton::~UIRadioButton()
 
 }
 
-void UIRadioButton::setChecked(bool checked)
-{
-    m_checked = checked;
-    update();
-}
-
-bool UIRadioButton::isChecked()
-{
-    return m_checked;
-}
-
 #ifdef _WIN32
 bool UIRadioButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 {
@@ -88,7 +77,8 @@ void UIRadioButton::onPaint(const RECT&)
 {
     engine()->DrawRadioButton(m_text, m_hFont, m_check_rc, m_checked);
 #ifdef __linux__
-    updateInputRegion(m_check_rc);
+    if (m_restrictedClickArea)
+        updateInputRegion(m_check_rc);
 #endif
 }
 

@@ -1,5 +1,6 @@
 #include "uibutton.h"
 #include "uidrawningengine.h"
+#include "uiscalaranimation.h"
 #ifdef _WIN32
 # include <windowsx.h>
 # include "uipalette.h"
@@ -17,7 +18,8 @@ static bool isArrangingAllowed() {
 UIButton::UIButton(UIWidget *parent, const tstring &text) :
     UIAbstractButton(parent, text),
     UIconHandler(this),
-    m_stockIcon(StockIcon::None)
+    m_stockIcon(StockIcon::None),
+    m_maxRotationAngle(90.0)
 #ifdef _WIN32
     , supportSnapLayouts(false),
     snapLayoutAllowed(false),
@@ -47,6 +49,18 @@ void UIButton::setStockIcon(StockIcon stockIcon)
 {
     m_stockIcon = stockIcon;
     update();
+}
+
+void UIButton::enableAnimationOnHover(int duration, double maxAngle)
+{
+    m_maxRotationAngle = maxAngle;
+
+    UIScalarAnimation *ra = iconRotateAnimation();
+    if (!ra) {
+        ra = new UIScalarAnimation;
+        setIconRotateAnimation(ra);
+    }
+    ra->setDuration(duration);
 }
 
 #ifdef _WIN32
@@ -92,6 +106,16 @@ bool UIButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
         break;
     }
 
+    case WM_MOUSEENTER: {
+        animateIconTo(m_maxRotationAngle);
+        break;
+    }
+
+    case WM_MOUSELEAVE: {
+        animateIconTo(0.0);
+        break;
+    }
+
     default:
         break;
     }
@@ -101,6 +125,16 @@ bool UIButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 bool UIButton::event(uint ev_type, void *param)
 {
     switch (ev_type) {
+    case GDK_ENTER_NOTIFY: {
+        animateIconTo(m_maxRotationAngle);
+        break;
+    }
+
+    case GDK_LEAVE_NOTIFY: {
+        animateIconTo(0.0);
+        break;
+    }
+
     default:
         break;
     }
@@ -117,12 +151,12 @@ void UIButton::onPaint(const RECT &rc)
     if (m_hBmp)
         de->DrawImage(m_hBmp);
     if (m_hEmf)
-        de->DrawEmfIcon(m_hEmf);
+        de->DrawEmfIcon(m_hEmf, iconAngle());
 #else
     if (m_hBmp)
         de->DrawIcon(m_hBmp);
     if (m_hSvg)
-        de->DrawSvgIcon(m_hSvg);
+        de->DrawSvgIcon(m_hSvg, iconAngle());
 #endif
     if (!m_text.empty())
         de->DrawString(rc, m_text, m_hFont);
@@ -138,4 +172,16 @@ void UIButton::onPaint(const RECT &rc)
     else
     if (m_stockIcon == StockIcon::MaximizeIcon)
         de->DrawStockMaximizeIcon();
+}
+
+void UIButton::animateIconTo(double targetAngle)
+{
+    if (UIScalarAnimation* ra = iconRotateAnimation()) {
+        ra->stopAnimation();
+        double val = ra->currentValue();
+        if (val != targetAngle) {
+            ra->setTargetValue(targetAngle);
+            ra->startAnimation();
+        }
+    }
 }

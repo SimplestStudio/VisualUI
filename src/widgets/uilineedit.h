@@ -3,6 +3,7 @@
 
 #include "uiabstractbutton.h"
 #include "uiconhandler.h"
+#include <vector>
 
 
 class DECL_VISUALUI UILineEdit : public UIAbstractButton, public UIconHandler
@@ -13,6 +14,7 @@ public:
 
     virtual void setText(const tstring &text) noexcept override;
     void setPlaceholderText(const tstring &text) noexcept;
+    void setEditable(bool editable);
 
 protected:
 #ifdef _WIN32
@@ -23,21 +25,27 @@ protected:
     virtual void onPaint(const RECT &rc) override;
 
 private:
-    void textBounds(const tstring &text, Rect &rc);
+    const tstring& displayedText() const;
+    void calculateCaretPositions();
+    void updateViewportAndCaret();
+    void updateCaretOnMouseClick(int x, int y);
+    void updateCaretPosition();
+    void defaultCaretRect(Rect &rc);
 
     tstring m_sourceText,
-            m_placeholderText,
-            m_viewportText;
+            m_placeholderText;
 #ifdef _WIN32
     bool m_caretCreated;
-    Gdiplus::RectF m_viewportRc;
 #else
     GtkWidget *m_caret;
-    Rect m_viewportRc;
 #endif
-    uint32_t m_pos,
-         m_caretPosX,
-         m_caretPosY;
+    Rect m_viewportRc;
+    bool m_editable;
+    size_t m_pos;
+    int  m_caretPosX,
+         m_caretPosY,
+         m_textOffsetX;
+    std::vector<Point> m_caretPositions;
 };
 
 #endif // UILINEEDIT_H

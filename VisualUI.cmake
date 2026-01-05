@@ -23,6 +23,7 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/graphics/uistyle.h
     ${UICLASSES}/graphics/uigeometryanimation.h
     ${UICLASSES}/graphics/uiopacityanimation.h
+    ${UICLASSES}/graphics/uiscalaranimation.h
     ${UICLASSES}/graphics/uiconhandler.h
     ${UICLASSES}/graphics/uidraghandler.h
     ${UICLASSES}/graphics/uitooltiphandler.h
@@ -42,6 +43,7 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/widgets/uiwindow.h
     ${UICLASSES}/widgets/uiabstractwindow.h
     ${UICLASSES}/widgets/uiabstractpopup.h
+    ${UICLASSES}/widgets/uiabstractscrollarea.h
     ${UICLASSES}/widgets/uitooltip.h
     ${UICLASSES}/widgets/uimenu.h
     ${UICLASSES}/widgets/uiwidget.h
@@ -49,12 +51,17 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/widgets/uicaption.h
     ${UICLASSES}/widgets/uiabstractbutton.h
     ${UICLASSES}/widgets/uibutton.h
+    ${UICLASSES}/widgets/uitoolbutton.h
     ${UICLASSES}/widgets/uicheckbox.h
     ${UICLASSES}/widgets/uiradiobutton.h
     ${UICLASSES}/widgets/uitogglebutton.h
     ${UICLASSES}/widgets/uiprogressbar.h
+    ${UICLASSES}/widgets/uiscrollbar.h
+    ${UICLASSES}/widgets/uiscrollarea.h
+    ${UICLASSES}/widgets/uilistview.h
     ${UICLASSES}/widgets/uilineedit.h
     # ${UICLASSES}/widgets/uitextedit.h
+    ${UICLASSES}/widgets/uicombobox.h
     ${UICLASSES}/layout/uispacer.h
     ${UICLASSES}/layout/uilayoutitem.h
     ${UICLASSES}/layout/uilayout.h
@@ -71,6 +78,7 @@ set(VISUALUI_SOURCES
     ${UICLASSES}/graphics/uistyle.cpp
     ${UICLASSES}/graphics/uigeometryanimation.cpp
     ${UICLASSES}/graphics/uiopacityanimation.cpp
+    ${UICLASSES}/graphics/uiscalaranimation.cpp
     ${UICLASSES}/graphics/uiconhandler.cpp
     ${UICLASSES}/graphics/uidraghandler.cpp
     ${UICLASSES}/graphics/uitooltiphandler.cpp
@@ -88,6 +96,7 @@ set(VISUALUI_SOURCES
     ${UICLASSES}/widgets/uiwindow.cpp
     ${UICLASSES}/widgets/uiabstractwindow.cpp
     ${UICLASSES}/widgets/uiabstractpopup.cpp
+    ${UICLASSES}/widgets/uiabstractscrollarea.cpp
     ${UICLASSES}/widgets/uitooltip.cpp
     ${UICLASSES}/widgets/uimenu.cpp
     ${UICLASSES}/widgets/uiwidget.cpp
@@ -95,12 +104,17 @@ set(VISUALUI_SOURCES
     ${UICLASSES}/widgets/uicaption.cpp
     ${UICLASSES}/widgets/uiabstractbutton.cpp
     ${UICLASSES}/widgets/uibutton.cpp
+    ${UICLASSES}/widgets/uitoolbutton.cpp
     ${UICLASSES}/widgets/uicheckbox.cpp
     ${UICLASSES}/widgets/uiradiobutton.cpp
     ${UICLASSES}/widgets/uitogglebutton.cpp
     ${UICLASSES}/widgets/uiprogressbar.cpp
+    ${UICLASSES}/widgets/uiscrollbar.cpp
+    ${UICLASSES}/widgets/uiscrollarea.cpp
+    ${UICLASSES}/widgets/uilistview.cpp
     ${UICLASSES}/widgets/uilineedit.cpp
     # ${UICLASSES}/widgets/uitextedit.cpp
+    ${UICLASSES}/widgets/uicombobox.cpp
     ${UICLASSES}/layout/uispacer.cpp
     ${UICLASSES}/layout/uilayoutitem.cpp
     ${UICLASSES}/layout/uilayout.cpp
@@ -132,6 +146,7 @@ if (WIN32)
 
 elseif (UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
+    find_package(Threads REQUIRED)
     pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
     pkg_check_modules(LIBXML2 REQUIRED libxml-2.0)
     pkg_check_modules(GIO REQUIRED gio-2.0)
@@ -150,5 +165,6 @@ elseif (UNIX AND NOT APPLE)
         ${LIBXML2_LIBRARIES}
         ${GIO_LIBRARIES}
         ${RSVG_LIBRARIES}
+        Threads::Threads
     )
 endif()

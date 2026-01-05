@@ -52,7 +52,7 @@ if (WIN32)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS,5.01")
     endif()
     target_link_libraries(${PROJECT_NAME} PRIVATE
-        "${VISUALUI_ROOT}/lib/build/visualui.lib"
+        "${VISUALUI_ROOT}/lib/build/$<CONFIG>/visualui.lib"
         gdiplus shlwapi comctl32 winmm
     )
 
@@ -71,7 +71,7 @@ elseif (UNIX AND NOT APPLE)
         ${RSVG_INCLUDE_DIRS}
     )
     target_link_libraries(${PROJECT_NAME} PRIVATE
-        "${VISUALUI_ROOT}/lib/build/libvisualui.a"
+        "${VISUALUI_ROOT}/lib/build/$<CONFIG>/libvisualui.a"
         X11
         ${GTK3_LIBRARIES}
         ${LIBXML2_LIBRARIES}

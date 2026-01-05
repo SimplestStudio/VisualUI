@@ -8,7 +8,6 @@
 # include <windowsx.h>
 # include <shlwapi.h>
 #else
-# include "uiapplication.h"
 # include <gtk/gtkx.h>
 # include <X11/Xlib.h>
 # include <X11/Xatom.h>
@@ -28,11 +27,6 @@ using GetSystemMetricsForDpi_t = int (WINAPI*)(int nIndex, UINT dpi);
 
 static const WinVer ver = UIUtils::winVersion();
 
-struct NotifyParams {
-    HWND senderHwnd = nullptr;
-    WPARAM wParam = 0;
-    LPARAM lParam = 0;
-};
 
 static auto pGetSystemMetricsForDpi = []() -> GetSystemMetricsForDpi_t
 {
@@ -41,44 +35,10 @@ static auto pGetSystemMetricsForDpi = []() -> GetSystemMetricsForDpi_t
     return nullptr;
 }();
 
-static BOOL CALLBACK NcActivationNotifyProc(_In_ HWND hwnd, _In_ LPARAM lParam)
-{
-    NotifyParams* params = (NotifyParams*)lParam;
-    SendMessage(hwnd, WM_PARENT_ACTIVATION_NOTIFY, params->wParam, 0);
-    return TRUE;
-}
-
 static BOOL CALLBACK SettingsChangeNotifyProc(_In_ HWND hwnd, _In_ LPARAM lParam)
 {
     NotifyParams* params = (NotifyParams*)lParam;
     SendMessage(hwnd, WM_SETTINGCHANGE_NOTIFY, params->wParam, 0);
-    return TRUE;
-}
-
-static BOOL CALLBACK ToplevelButtondownNotifyProc(_In_ HWND hwnd, _In_ LPARAM lParam)
-{
-    NotifyParams* params = (NotifyParams*)lParam;
-    if (hwnd != params->senderHwnd && GetWindow(hwnd, GW_OWNER) == params->senderHwnd) {
-        SendMessage(hwnd, WM_TOPLEVEL_BUTTONDOWN_NOTIFY, params->wParam, 0);
-    }
-    return TRUE;
-}
-
-static BOOL CALLBACK ToplevelKeydownNotifyProc(_In_ HWND hwnd, _In_ LPARAM lParam)
-{
-    NotifyParams* params = (NotifyParams*)lParam;
-    if (hwnd != params->senderHwnd && GetWindow(hwnd, GW_OWNER) == params->senderHwnd) {
-        SendMessage(hwnd, WM_TOPLEVEL_KEYDONW_NOTIFY, params->wParam, 0);
-    }
-    return TRUE;
-}
-
-static BOOL CALLBACK ToplevelNcActivationNotifyProc(_In_ HWND hwnd, _In_ LPARAM lParam)
-{
-    NotifyParams* params = (NotifyParams*)lParam;
-    if (hwnd != params->senderHwnd && GetWindow(hwnd, GW_OWNER) == params->senderHwnd) {
-        SendMessage(hwnd, WM_TOPLEVEL_ACTIVATION_NOTIFY, params->wParam, 0);
-    }
     return TRUE;
 }
 
@@ -255,42 +215,6 @@ static bool isThemeActive()
 # define WINDOW_CORNER_RADIUS_KDE       6
 # define WINDOW_CORNER_RADIUS_CINNAMON  3
 # define WINDOW_CORNER_RADIUS_XFCE      4
-
-static void EnumChildLayouts(GtkWidget *widget, gpointer data)
-{
-    GList **result_list = (GList**)data;
-    if (GTK_IS_LAYOUT(widget)) {
-        *result_list = g_list_append(*result_list, widget);
-    }
-    if (GTK_IS_CONTAINER(widget)) {
-        gtk_container_foreach(GTK_CONTAINER(widget), EnumChildLayouts, data);
-    }
-}
-
-static void ParentNotifyProc(GtkWidget *sender, uint event_type, void *param)
-{
-    GList *children = NULL;
-    gtk_container_foreach(GTK_CONTAINER(sender), (GtkCallback)EnumChildLayouts, (gpointer)&children);
-    GList *it;
-    for (it = children; it != NULL; it = it->next) {
-        GtkWidget *child = GTK_WIDGET(it->data);
-        UIApplication::sendEvent(child, event_type, param);
-    }
-    g_list_free(children);
-}
-
-static void ToplevelNotifyProc(GtkWidget *sender, uint event_type, void *param)
-{
-    GList *windows = gtk_window_list_toplevels();
-    GList *it;
-    for (it = windows; it != NULL; it = it->next) {
-        GtkWindow *window = GTK_WINDOW(it->data);
-        if (GTK_WIDGET(window) != sender && GTK_WIDGET(gtk_window_get_transient_for(window)) == sender) {
-            UIApplication::sendEvent(GTK_WIDGET(window), event_type, param);
-        }
-    }
-    g_list_free(windows);
-}
 
 static gboolean onUpdateGeometry(gpointer data)
 {
@@ -501,7 +425,7 @@ BYTE UIWindow::cornersPlacementAndRadius(int &radius)
     return UIDrawingEngine::CornerAll;
 }
 
-Size UIWindow::size() const
+Size UIWindow::size() const noexcept
 {
     int w = 0, h = 0;
     gtk_window_get_size(GTK_WINDOW(m_hWindow), &w, &h);
@@ -512,7 +436,7 @@ Size UIWindow::size() const
     return Size(w, h);
 }
 
-void UIWindow::size(int *width, int *height) const
+void UIWindow::size(int *width, int *height) const noexcept
 {
     gtk_window_get_size(GTK_WINDOW(m_hWindow), width, height);
     if (!gtk_window_is_maximized(GTK_WINDOW(m_hWindow))) {
@@ -687,26 +611,6 @@ bool UIWindow::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
         break;
     }
 
-    case WM_LBUTTONDOWN:
-    case WM_RBUTTONDOWN:
-    case WM_MBUTTONDOWN:
-    case WM_CHILD_BUTTONDOWN_NOTIFY: {
-        NotifyParams params;
-        params.senderHwnd = m_hWindow;
-        params.wParam = wParam;
-        EnumThreadWindows(GetCurrentThreadId(), ToplevelButtondownNotifyProc, (LPARAM)&params);
-        break;
-    }
-
-    case WM_KEYDOWN:
-    case WM_CHILD_KEYDOWN_NOTIFY: {
-        NotifyParams params;
-        params.senderHwnd = m_hWindow;
-        params.wParam = wParam;
-        EnumThreadWindows(GetCurrentThreadId(), ToplevelKeydownNotifyProc, (LPARAM)&params);
-        break;
-    }
-
     case WM_PAINT: {
         UIDrawingEngine *de = engine();
         RECT rc;
@@ -831,10 +735,7 @@ bool UIWindow::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
     }
 
     case WM_NCACTIVATE: {
-        NotifyParams params;
-        params.senderHwnd = m_hWindow;
-        params.wParam = wParam;
-        EnumChildWindows(m_hWindow, NcActivationNotifyProc, (LPARAM)&params);
+        *result = UIAbstractWindow::event(msg, wParam, lParam, result);
         if (m_borderless) {
             if (ver > WinVer::WinXP && ver < WinVer::Win10) {
                 // Prevent drawing of inactive system frame (needs ~WS_CAPTION or temporary ~WS_VISIBLE to work)
@@ -849,7 +750,6 @@ bool UIWindow::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
                 RedrawWindow(m_hWindow, &rc, NULL, RDW_INVALIDATE | RDW_NOERASE | RDW_INTERNALPAINT | RDW_UPDATENOW);
             }
         }
-        EnumThreadWindows(GetCurrentThreadId(), ToplevelNcActivationNotifyProc, (LPARAM)&params);
         return false;
     }
 
@@ -1029,14 +929,8 @@ bool UIWindow::event(uint ev_type, void *param)
     }
 
     case GDK_HOOKED_WINDOW_STATE_AFTER: {
+        UIAbstractWindow::event(ev_type, param);
         GdkEvent *ev = (GdkEvent*)param;
-        if (ev->window_state.changed_mask & GDK_WINDOW_STATE_FOCUSED) {
-            bool focused = ev->window_state.new_window_state & GDK_WINDOW_STATE_FOCUSED;
-            if (m_gtk_layout) {
-                ParentNotifyProc(m_gtk_layout, GDK_PARENT_ACTIVATION_NOTIFY, (void*)&focused);
-            }
-            ToplevelNotifyProc(m_hWindow, GDK_TOPLEVEL_ACTIVATION_NOTIFY, (void*)&focused);
-        }
         if (ev->window_state.changed_mask & (GDK_WINDOW_STATE_ICONIFIED | GDK_WINDOW_STATE_MAXIMIZED | GDK_WINDOW_STATE_FULLSCREEN)) {
             int m_state = (int)ev->window_state.new_window_state & (GDK_WINDOW_STATE_ICONIFIED | GDK_WINDOW_STATE_MAXIMIZED | GDK_WINDOW_STATE_FULLSCREEN);
             m_isMaximized = m_state & GDK_WINDOW_STATE_MAXIMIZED;
@@ -1051,18 +945,6 @@ bool UIWindow::event(uint ev_type, void *param)
                 g_idle_add_full(G_PRIORITY_LOW, onUpdateGeometry, m_hWindow, NULL);
         }
         return false;
-    }
-
-    case GDK_BUTTON_PRESS:
-    case GDK_CHILD_BUTTONDOWN_NOTIFY: {
-        GdkEventButton *bev = (GdkEventButton*)param;
-        ToplevelNotifyProc(m_hWindow, GDK_TOPLEVEL_BUTTONDOWN_NOTIFY, (void*)&bev->button);
-        return false;
-    }
-
-    case GDK_KEY_PRESS: {
-        ToplevelNotifyProc(m_hWindow, GDK_TOPLEVEL_KEYDONW_NOTIFY, (void*)param);
-        break;
     }
 
     default:

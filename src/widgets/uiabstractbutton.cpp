@@ -15,7 +15,10 @@ UIAbstractButton::UIAbstractButton(UIWidget *parent, const tstring &text) :
     UIWidget(parent, ObjectType::WidgetType),
     m_text(text),
     m_tooltipHandler(nullptr),
-    m_checked(false)
+    m_checked(false),
+    m_selected(false),
+    m_selectable(false),
+    m_restrictedClickArea(false)
 {
 #ifdef _WIN32
     DWORD dwStyle = ::GetClassLong(m_hWindow, GCL_STYLE);
@@ -37,6 +40,28 @@ void UIAbstractButton::setText(const tstring &text) noexcept
     update();
 }
 
+void UIAbstractButton::setChecked(bool checked)
+{
+    m_checked = checked;
+    update();
+}
+
+void UIAbstractButton::setSelected(bool enabled) noexcept
+{
+    if (!m_selectable) return;
+
+    m_selected = enabled;
+    if (!m_disabled) {
+        palette()->setCurrentState(m_selected ? Palette::Active : Palette::Normal);
+        update();
+    }
+}
+
+void UIAbstractButton::setSelectable(bool enabled) noexcept
+{
+    m_selectable = enabled;
+}
+
 void UIAbstractButton::setToolTip(const tstring &text) noexcept
 {
     if (!m_tooltipHandler)
@@ -44,17 +69,32 @@ void UIAbstractButton::setToolTip(const tstring &text) noexcept
     m_tooltipHandler->setToolTipText(text);
 }
 
-tstring UIAbstractButton::text() noexcept
+tstring UIAbstractButton::text() const noexcept
 {
     return m_text;
+}
+
+bool UIAbstractButton::isSelected() const noexcept
+{
+    return m_selected;
+}
+
+bool UIAbstractButton::isChecked() const noexcept
+{
+    return m_checked;
+}
+
+void UIAbstractButton::restrictClickArea(bool restrict) noexcept
+{
+    m_restrictedClickArea = restrict;
 }
 
 void UIAbstractButton::adjustSizeBasedOnContent()
 {
     int width = 0, height = 0;
     const Metrics *mtr = metrics();
-    UIFontMetrics fm;
-    fm.textSize(this, m_hFont, m_text, width, height);
+    UIFontMetrics fm(this);
+    fm.textSize(m_text, width, height);
     width /= m_dpi_ratio;
     height /= m_dpi_ratio;
     int w = width + 2 * mtr->value(Metrics::IconWidth) + mtr->value(Metrics::TextMarginLeft) + mtr->value(Metrics::TextMarginRight);
@@ -71,6 +111,8 @@ bool UIAbstractButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *re
 {
     switch (msg) {
     case WM_NCHITTEST: {
+        if (!m_restrictedClickArea)
+            break;
         *result = checkInputRegion(lParam, m_check_rc);
         return true;
     }
@@ -85,7 +127,9 @@ bool UIAbstractButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *re
 
     case WM_LBUTTONUP: {
         if (!m_disabled) {
-            palette()->setCurrentState(Palette::Hover);
+            if (m_selectable)
+                m_selected = true;
+            palette()->setCurrentState(m_selected ? Palette::Active : Palette::Hover);
             repaint();
             click();
         }
@@ -94,9 +138,10 @@ bool UIAbstractButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *re
 
     case WM_MOUSEENTER: {
         if (!m_disabled) {
-            palette()->setCurrentState(Palette::Hover);
-            repaint();
-
+            if (!m_selected) {
+                palette()->setCurrentState(Palette::Hover);
+                repaint();
+            }
         }
         break;
     }
@@ -105,8 +150,10 @@ bool UIAbstractButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *re
         if (!m_disabled) {
             if (m_tooltipHandler)
                 m_tooltipHandler->skipToolTip();
-            palette()->setCurrentState(Palette::Normal);
-            repaint();
+            if (!m_selected) {
+                palette()->setCurrentState(Palette::Normal);
+                repaint();
+            }
         }
         break;
     }
@@ -140,7 +187,9 @@ bool UIAbstractButton::event(uint ev_type, void *param)
     case GDK_BUTTON_RELEASE: {
         UIWidget::event(ev_type, param);
         if (!m_disabled) {
-            palette()->setCurrentState(Palette::Hover);
+            if (m_selectable)
+                m_selected = true;
+            palette()->setCurrentState(m_selected ? Palette::Active : Palette::Hover);
             repaint();
             click();
         }
@@ -149,8 +198,10 @@ bool UIAbstractButton::event(uint ev_type, void *param)
 
     case GDK_ENTER_NOTIFY: {
         if (!m_disabled) {
-            palette()->setCurrentState(Palette::Hover);
-            repaint();
+            if (!m_selected) {
+                palette()->setCurrentState(Palette::Hover);
+                repaint();
+            }
         }
         break;
     }
@@ -159,8 +210,10 @@ bool UIAbstractButton::event(uint ev_type, void *param)
         if (!m_disabled) {
             if (m_tooltipHandler)
                 m_tooltipHandler->skipToolTip();
-            palette()->setCurrentState(Palette::Normal);
-            repaint();
+            if (!m_selected) {
+                palette()->setCurrentState(Palette::Normal);
+                repaint();
+            }
         }
         break;
     }

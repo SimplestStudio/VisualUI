@@ -40,7 +40,11 @@ UIWidget::UIWidget(UIWidget *parent) :
 UIWidget::UIWidget(UIWidget *parent, ObjectType type, PlatformWindow hWindow, const Rect &rc) :
     UIObject(type, parent),
     UIDrawningSurface(),
+#ifdef _WIN32
     m_hFont(nullptr),
+#else
+    m_hFont(new FontDescription),
+#endif
     m_hWindow(hWindow),
 #ifdef _WIN32
     m_root_hWnd(nullptr),
@@ -53,7 +57,6 @@ UIWidget::UIWidget(UIWidget *parent, ObjectType type, PlatformWindow hWindow, co
     m_rtl(UIApplication::instance()->layoutDirection() == UIApplication::RightToLeft),
     m_drag_handler(nullptr),
     m_geometry_animation(nullptr),
-    m_font_size(10.0),
     m_is_created(false),
     m_is_active(false),
     m_is_destroyed(false),
@@ -82,7 +85,7 @@ UIWidget::UIWidget(UIWidget *parent, ObjectType type, PlatformWindow hWindow, co
     m_root_is_layered = (m_root_hWnd && (GetWindowLong(m_root_hWnd, GWL_EXSTYLE) & WS_EX_LAYERED));
 #endif
     if (!hWindow) {
-        setFont(UIApplication::instance()->font(), UIApplication::instance()->fontPointSize());
+        setFont(UIApplication::instance()->font());
         UIApplication::instance()->style()->registerWidget(this);
     }
 }
@@ -98,7 +101,7 @@ UIWidget::~UIWidget()
     UIApplication::instance()->style()->unregisterWidget(this);
     m_is_class_destroyed = true;
     if (m_layout) {
-        if (UIUtils::isAllocOnHeap(m_layout))
+        if (!UIMemory::isOnStack(m_layout))
             delete m_layout;
         m_layout = nullptr;
     }
@@ -110,8 +113,9 @@ UIWidget::~UIWidget()
 #else
     if (!m_is_destroyed)
         gtk_widget_destroy(m_hWindow);
-    if (m_hFont)
-        pango_font_description_free(m_hFont);
+    if (m_hFont->desc)
+        pango_font_description_free(m_hFont->desc);
+    delete m_hFont;
 #endif
 }
 
@@ -205,7 +209,7 @@ UIWidget *UIWidget::parentWidget() const noexcept
     return dynamic_cast<UIWidget*>(parent());
 }
 
-Size UIWidget::size() const
+Size UIWidget::size() const noexcept
 {
 #ifdef _WIN32
     RECT rc;
@@ -216,7 +220,7 @@ Size UIWidget::size() const
 #endif
 }
 
-void UIWidget::size(int *width, int *height) const
+void UIWidget::size(int *width, int *height) const noexcept
 {
 #ifdef _WIN32
     RECT rc;
@@ -229,7 +233,7 @@ void UIWidget::size(int *width, int *height) const
 #endif
 }
 
-Point UIWidget::pos() const
+Point UIWidget::pos() const noexcept
 {
 #ifdef _WIN32
     WINDOWPLACEMENT wp;
@@ -240,6 +244,26 @@ Point UIWidget::pos() const
     GtkAllocation alc;
     gtk_widget_get_allocation(m_hWindow, &alc);
     return Point(alc.x, alc.y);
+#endif
+}
+
+Point UIWidget::mapToGlobal(Point localPos) const
+{
+#ifdef _WIN32
+    POINT pt = { localPos.x, localPos.y };
+    ClientToScreen(m_hWindow, &pt);
+    return Point(pt.x, pt.y);
+#else
+    if (GtkWidget *root = gtk_widget_get_toplevel(m_hWindow)) {
+        if (GdkWindow *gdk_wnd = gtk_widget_get_window(root)) {
+            gint local_x = localPos.x, local_y = localPos.y;
+            gint wnd_x = 0, wnd_y = 0;
+            gtk_widget_translate_coordinates(m_hWindow, root, 0, 0, &local_x, &local_y);
+            gdk_window_get_origin(gdk_wnd, &wnd_x, &wnd_y);
+            return Point(wnd_x + local_x, wnd_y + local_y);
+        }
+    }
+    return localPos;
 #endif
 }
 
@@ -254,22 +278,22 @@ void UIWidget::updateGeometry()
 #endif
 }
 
-UIGeometryAnimation *UIWidget::geometryAnimation()
+UIGeometryAnimation *UIWidget::geometryAnimation() noexcept
 {
     return m_geometry_animation;
 }
 
-void UIWidget::setGeometryAnimation(UIGeometryAnimation *geometry_animation)
+void UIWidget::setGeometryAnimation(UIGeometryAnimation *geometry_animation) noexcept
 {
     m_geometry_animation = geometry_animation;
 }
 
-UIDragHandler *UIWidget::dragHandler()
+UIDragHandler *UIWidget::dragHandler() noexcept
 {
     return m_drag_handler;
 }
 
-void UIWidget::setDragHandler(UIDragHandler *drag_handler)
+void UIWidget::setDragHandler(UIDragHandler *drag_handler) noexcept
 {
     m_drag_handler = drag_handler;
 }
@@ -279,31 +303,67 @@ void UIWidget::applyStyle()
     UIApplication::instance()->style()->setStyle(this);
 }
 
-void UIWidget::setSizePolicy(SizePolicy::Properties property, int val)
+void UIWidget::setSizePolicy(SizePolicy::Properties property, int val) noexcept
 {
     m_size_behaviors[property] = val;
 }
 
-void UIWidget::setFont(const tstring &font, double fontPointSize)
+void UIWidget::setFont(const FontInfo &fontInfo)
 {
-    m_font_size = fontPointSize > 0 ? fontPointSize : 10.0;
+    m_fontInfo = fontInfo;
+    if (m_fontInfo.name.empty())
+        m_fontInfo.name = DEFAULT_FONT_NAME;
 #ifdef _WIN32
-    m_font = font.empty() ? L"Arial" : font;
     if (m_hFont) {
         DeleteObject(m_hFont);
         m_hFont = nullptr;
     }
-    int h = -round((double)MulDiv(m_font_size * 10, m_dpi_ratio * 96, 72)/10);
-    m_hFont = CreateFont(h, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, m_font.c_str());
+
+    int wt = m_fontInfo.weight;
+    int weight =
+        (wt <= 100) ? FW_THIN :
+        (wt <= 200) ? FW_ULTRALIGHT :
+        (wt <= 300) ? FW_LIGHT :
+        (wt <= 400) ? FW_NORMAL :
+        (wt <= 500) ? FW_MEDIUM :
+        (wt <= 600) ? FW_SEMIBOLD :
+        (wt <= 700) ? FW_BOLD :
+        (wt <= 800) ? FW_ULTRABOLD :
+        (wt <= 900) ? FW_HEAVY : 1000;
+
+    int h = -round((double)MulDiv(m_fontInfo.pointSize * 10, m_dpi_ratio * 96, 72)/10);
+    m_hFont = CreateFontA(h, 0, 0, 0, weight, m_fontInfo.italic, m_fontInfo.underline, m_fontInfo.strikeOut,
+                          DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, m_fontInfo.name.c_str());
 #else
-    m_font = font.empty() ? "Helvetica" : font;
-    if (m_hFont) {
-        pango_font_description_free(m_hFont);
-        m_hFont = nullptr;
+    if (m_hFont->desc) {
+        pango_font_description_free(m_hFont->desc);
+        m_hFont->desc = nullptr;
     }
-    m_hFont = pango_font_description_new();
-    pango_font_description_set_family(m_hFont, m_font.c_str());
-    pango_font_description_set_size(m_hFont, m_font_size * PANGO_SCALE);
+    m_hFont->desc = pango_font_description_new();
+    m_hFont->underline = false;
+    m_hFont->strikeOut = false;
+
+    int wt = m_fontInfo.weight;
+    PangoWeight weight =
+        (wt <= 100) ? PANGO_WEIGHT_THIN :
+        (wt <= 200) ? PANGO_WEIGHT_ULTRALIGHT :
+        (wt <= 300) ? PANGO_WEIGHT_LIGHT :
+        (wt <= 350) ? PANGO_WEIGHT_SEMILIGHT :
+        (wt <= 380) ? PANGO_WEIGHT_BOOK :
+        (wt <= 400) ? PANGO_WEIGHT_NORMAL :
+        (wt <= 500) ? PANGO_WEIGHT_MEDIUM :
+        (wt <= 600) ? PANGO_WEIGHT_SEMIBOLD :
+        (wt <= 700) ? PANGO_WEIGHT_BOLD :
+        (wt <= 800) ? PANGO_WEIGHT_ULTRABOLD :
+        (wt <= 900) ? PANGO_WEIGHT_HEAVY : PANGO_WEIGHT_ULTRAHEAVY;
+
+    pango_font_description_set_family(m_hFont->desc, m_fontInfo.name.c_str());
+    pango_font_description_set_size(m_hFont->desc, m_fontInfo.pointSize * PANGO_SCALE);
+    pango_font_description_set_weight(m_hFont->desc, weight);
+    if (m_fontInfo.italic)
+        pango_font_description_set_style(m_hFont->desc, PANGO_STYLE_ITALIC);
+    if (m_fontInfo.underline) m_hFont->underline = true;
+    if (m_fontInfo.strikeOut) m_hFont->strikeOut = true;
 #endif
 }
 
@@ -313,7 +373,7 @@ void UIWidget::setBaseSize(int w, int h)
     resize(round(w * m_dpi_ratio), round(h * m_dpi_ratio));
 }
 
-void UIWidget::setCorners(unsigned char corner)
+void UIWidget::setCorners(unsigned char corner) noexcept
 {
     m_corners = corner;
 }
@@ -401,14 +461,29 @@ void UIWidget::setLayout(UILayout *layout)
     }
 }
 
-bool UIWidget::isCreated()
+bool UIWidget::isCreated() const noexcept
 {
     return m_is_created;
 }
 
-bool UIWidget::isActive()
+bool UIWidget::isActive() const noexcept
 {
     return m_is_active;
+}
+
+bool UIWidget::isVisible() const noexcept
+{
+#ifdef _WIN32
+    return IsWindowVisible(m_hWindow);
+#else
+    return gtk_widget_is_visible(m_hWindow);
+#endif
+}
+
+bool UIWidget::isWindow() const noexcept
+{
+    UIObject::ObjectType type = objectType();
+    return type == UIObject::WindowType || type == UIObject::DialogType || type == UIObject::PopupType;
 }
 
 bool UIWidget::underMouse()
@@ -454,14 +529,19 @@ void UIWidget::ungrabMouse()
 #endif
 }
 
-int UIWidget::sizePolicy(SizePolicy::Properties property)
+int UIWidget::sizePolicy(SizePolicy::Properties property) const noexcept
 {
     return m_size_behaviors[property];
 }
 
-double UIWidget::dpiRatio()
+double UIWidget::dpiRatio() const noexcept
 {
     return m_dpi_ratio;
+}
+
+FontInfo UIWidget::font() const
+{
+    return m_fontInfo;
 }
 
 UILayout *UIWidget::layout() const noexcept
@@ -477,16 +557,25 @@ PlatformWindow UIWidget::platformWindow() const noexcept
 UIWidget* UIWidget::topLevelWidget() const noexcept
 {
     const UIWidget *top = this;
-    while (const UIWidget *parent = top->parentWidget()) {
+    UIWidget *parent = nullptr;
+    while (!top->isWindow() && (parent = top->parentWidget()) != nullptr) {
         top = parent;
     }
     return const_cast<UIWidget*>(top);
 }
 
-UIWidget *UIWidget::widgetFromHwnd(UIWidget *parent, PlatformWindow hwnd)
+UIWidget *UIWidget::widgetFromPlatformWindow(UIWidget *parent, PlatformWindow hwnd)
 {
     return new UIWidget(parent, ObjectType::WidgetType, hwnd);
 }
+
+#ifdef _WIN32
+void UIWidget::enableClipSiblings() const
+{
+    DWORD style = GetWindowLong(m_hWindow, GWL_STYLE);
+    SetWindowLong(m_hWindow, GWL_STYLE, style | WS_CLIPSIBLINGS);
+}
+#endif
 
 void UIWidget::onInvokeMethod(long long wParam)
 {
@@ -554,8 +643,9 @@ bool UIWidget::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
             DeleteObject(m_hFont);
             m_hFont = nullptr;
         }
-        int h = -round((double)MulDiv(m_font_size * 10, m_dpi_ratio * 96, 72)/10);
-        m_hFont = CreateFont(h, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, m_font.c_str());
+        int h = -round((double)MulDiv(m_fontInfo.pointSize * 10, m_dpi_ratio * 96, 72)/10);
+        m_hFont = CreateFontA(h, 0, 0, 0, m_fontInfo.weight, m_fontInfo.italic, m_fontInfo.underline, m_fontInfo.strikeOut,
+                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, m_fontInfo.name.c_str());
         resize(round(m_base_size.width * m_dpi_ratio), round(m_base_size.height * m_dpi_ratio));
         break;
     }
@@ -676,7 +766,7 @@ bool UIWidget::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 
         SetWindowLongPtr(m_hWindow, GWLP_USERDATA, 0);
         if (!m_is_class_destroyed) {
-            if (UIUtils::isAllocOnHeap(this)) {
+            if (!UIMemory::isOnStack(this)) {
                 delete this;
             }
         }
@@ -826,7 +916,7 @@ bool UIWidget::event(uint ev_type, void *param)
 
         g_object_set_data(G_OBJECT(m_hWindow), "UIWidget", NULL);
         if (!m_is_class_destroyed) {
-            if (UIUtils::isAllocOnHeap(this)) {
+            if (!UIMemory::isOnStack(this)) {
                 delete this;
             }
         }

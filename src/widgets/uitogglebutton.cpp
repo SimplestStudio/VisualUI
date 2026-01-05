@@ -20,7 +20,7 @@ void UIToggleButton::setChecked(bool checked)
     update();
 }
 
-bool UIToggleButton::isChecked()
+bool UIToggleButton::isChecked() const noexcept
 {
     return m_checked;
 }
@@ -29,7 +29,8 @@ void UIToggleButton::onPaint(const RECT&)
 {
     engine()->DrawToggleButton(m_text, m_hFont, m_check_rc, m_checked);
 #ifdef __linux__
-    updateInputRegion(m_check_rc);
+    if (m_restrictedClickArea)
+        updateInputRegion(m_check_rc);
 #endif
 }
 

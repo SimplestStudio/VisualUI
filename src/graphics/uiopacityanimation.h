@@ -14,8 +14,8 @@ public:
     void startFadeIn();
     void startFadeOut();
     void stopAnimation();
-    bool isFadingOut() const;
-    int opacity() const;
+    bool isFadingOut() const noexcept;
+    int opacity() const noexcept;
 
 private:
     UIOpacityAnimationPrivate *pimpl;

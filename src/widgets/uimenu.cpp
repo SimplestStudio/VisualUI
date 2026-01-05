@@ -20,6 +20,7 @@ UIMenu::UIMenu(UIWidget *parent, const Rect &rc) :
     gtk_widget_set_can_focus(m_hWindow, FALSE);
     gtk_window_set_accept_focus(GTK_WINDOW(m_hWindow), FALSE);
     gtk_window_set_focus_on_map(GTK_WINDOW(m_hWindow), FALSE);
+    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(m_hWindow), TRUE);
 #endif
 
     m_vlut = new UIBoxLayout(UIBoxLayout::Vertical, UIBoxLayout::AlignCenter);
@@ -36,7 +37,7 @@ UIMenu::~UIMenu()
 UIButton* UIMenu::addSection(const tstring &text, const UIPixmap &pixmap)
 {
     UIButton *btn = new UIButton(this, text);
-    btn->setFont(_T("Arial"), 8.5);
+    btn->setFont({DEFAULT_FONT_NAME, 8.5});
     btn->setObjectGroupId(_T("MenuButton"));
     btn->metrics()->setMetrics(Metrics::IconAlignment, Metrics::AlignHLeft | Metrics::AlignVCenter);
     btn->metrics()->setMetrics(Metrics::IconMarginLeft, 6);

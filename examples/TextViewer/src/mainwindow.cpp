@@ -233,7 +233,7 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
     /* View panel */
     UILabel *viewPanel = new UILabel(cenPanel);
     viewPanel->setObjectGroupId(_T("ViewWidget"));
-    viewPanel->setFont(_T("Segoe UI"), 14);
+    viewPanel->setFont({DEFAULT_FONT_NAME, 14});
     viewPanel->setText(_T("Drag & Drop a file"));
     viewPanel->setSizePolicy(SizePolicy::HSizeBehavior, SizePolicy::Expanding);
     viewPanel->setSizePolicy(SizePolicy::VSizeBehavior, SizePolicy::Expanding);
@@ -323,11 +323,11 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
         tstring text;
         if (readFile(path, text)) {
             viewPanel->metrics()->setMetrics(Metrics::TextAlignment, Metrics::AlignHLeft | Metrics::AlignVTop);
-            viewPanel->setFont(_T("Segoe UI"), 10);
+            viewPanel->setFont({DEFAULT_FONT_NAME, 10});
             viewPanel->setText(text, true);
         } else {
             viewPanel->metrics()->setMetrics(Metrics::TextAlignment, Metrics::AlignCenter);
-            viewPanel->setFont(_T("Segoe UI"), 14);
+            viewPanel->setFont({DEFAULT_FONT_NAME, 14});
             viewPanel->setText(_T("Drag & Drop a file"));
         }
     };

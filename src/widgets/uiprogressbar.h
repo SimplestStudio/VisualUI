@@ -12,7 +12,7 @@ public:
 
     void setProgress(int progress);
     void pulse(bool);
-    void setPulseStep(int);
+    void setPulseStep(int) noexcept;
 
     /* callback */
 

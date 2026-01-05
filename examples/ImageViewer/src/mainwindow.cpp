@@ -277,7 +277,7 @@ MainWindow::MainWindow(const Rect &rc, BYTE flags) :
     viewPanel->setSizePolicy(SizePolicy::HSizeBehavior, SizePolicy::Expanding);
     viewPanel->setSizePolicy(SizePolicy::VSizeBehavior, SizePolicy::Expanding);
     viewPanel->setBaseSize(50, 50);
-    viewPanel->setFont(_T("Segoe UI"), 14);
+    viewPanel->setFont({DEFAULT_FONT_NAME, 14});
     viewPanel->setText(_T("Drag & Drop a file"));
     viewPanel->setAcceptDrops(true);
 

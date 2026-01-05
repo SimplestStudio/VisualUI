@@ -96,7 +96,7 @@ UIPixmap& UIPixmap::operator=(UIPixmap&& other) noexcept
     return *this;
 }
 
-bool UIPixmap::isValid() const
+bool UIPixmap::isValid() const noexcept
 {
 #ifdef _WIN32
     return (m_hBmp && m_hBmp->GetLastStatus() == Gdiplus::Ok);
@@ -105,7 +105,7 @@ bool UIPixmap::isValid() const
 #endif
 }
 
-Size UIPixmap::imageSize() const
+Size UIPixmap::imageSize() const noexcept
 {
     int w = -1, h = -1;
 #ifdef _WIN32

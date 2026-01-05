@@ -12,8 +12,14 @@ public:
     virtual ~UIAbstractButton();
 
     virtual void setText(const tstring &text) noexcept;
+    void setChecked(bool checked);
+    void setSelected(bool enabled) noexcept;
+    void setSelectable(bool enabled) noexcept;
     void setToolTip(const tstring &text) noexcept;
-    tstring text() noexcept;
+    tstring text() const noexcept;
+    bool isSelected() const noexcept;
+    bool isChecked() const noexcept;
+    void restrictClickArea(bool restrict) noexcept;
     void adjustSizeBasedOnContent();
 
     /* Signals */
@@ -30,7 +36,10 @@ protected:
     tstring  m_text;
     RECT m_check_rc;
     UIToolTipHandler *m_tooltipHandler;
-    bool m_checked;
+    bool m_checked,
+         m_selected,
+         m_selectable,
+         m_restrictedClickArea;
 
 private:
 };
