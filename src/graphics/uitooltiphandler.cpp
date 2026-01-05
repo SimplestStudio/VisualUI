@@ -76,8 +76,8 @@ void UIToolTipHandler::onToolTipCheck()
     if (!m_tooltipText.empty()) {
         int x = 0, y = 0;
         int width = 0, height = 0;
-        UIFontMetrics fm;
-        fm.textSize(m_parent, m_parent->m_hFont, m_tooltipText, width, height);
+        UIFontMetrics fm(m_parent);
+        fm.textSize(m_tooltipText, width, height);
         double dpi = m_parent->dpiRatio();
         width += 20 * dpi;
         height += 10 * dpi;

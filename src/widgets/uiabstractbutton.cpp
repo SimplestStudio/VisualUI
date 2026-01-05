@@ -93,8 +93,8 @@ void UIAbstractButton::adjustSizeBasedOnContent()
 {
     int width = 0, height = 0;
     const Metrics *mtr = metrics();
-    UIFontMetrics fm;
-    fm.textSize(this, m_hFont, m_text, width, height);
+    UIFontMetrics fm(this);
+    fm.textSize(m_text, width, height);
     width /= m_dpi_ratio;
     height /= m_dpi_ratio;
     int w = width + 2 * mtr->value(Metrics::IconWidth) + mtr->value(Metrics::TextMarginLeft) + mtr->value(Metrics::TextMarginRight);

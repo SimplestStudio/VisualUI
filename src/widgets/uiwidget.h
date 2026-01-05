@@ -79,6 +79,7 @@ public:
 
 protected:
     friend class UIApplication;
+    friend class UIFontMetrics;
     friend class UIToolTipHandler;
     UIWidget(UIWidget *parent, ObjectType type, PlatformWindow hWindow = nullptr, const Rect &rc = Rect(CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT));
 #ifdef _WIN32
