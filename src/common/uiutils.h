@@ -18,7 +18,7 @@ namespace UIUtils
     };
     DECL_VISUALUI WinVer winVersion() noexcept;
     DECL_VISUALUI std::wstring currentUserSID();
-    DECL_VISUALUI DWORD regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value);
+    DECL_VISUALUI DWORD regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value, bool *success = nullptr);
     DECL_VISUALUI void loadImageResource(Gdiplus::Bitmap* &hBmp, int id, LPCWSTR type);
     DECL_VISUALUI void loadEmfResource(Gdiplus::Metafile* &hBmp, int id, LPCWSTR type);
     DECL_VISUALUI void loadStringResource(tstring &str, int id);

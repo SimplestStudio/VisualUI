@@ -129,14 +129,16 @@ std::wstring UIUtils::currentUserSID()
     return user_sid;
 }
 
-DWORD UIUtils::regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value)
+DWORD UIUtils::regQueryDwordValue(HKEY rootKey, LPCWSTR subkey, LPCWSTR value, bool *success)
 {
     HKEY hKey;
     DWORD dwValue = 0;
     if (RegOpenKeyEx(rootKey, subkey, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
         DWORD dwType = REG_DWORD;
         DWORD dwSize = sizeof(DWORD);
-        RegQueryValueEx(hKey, value, nullptr, &dwType, (LPBYTE)&dwValue, &dwSize);
+        if (RegQueryValueEx(hKey, value, nullptr, &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS && success) {
+            *success = true;
+        }
         RegCloseKey(hKey);
     }
     return dwValue;
