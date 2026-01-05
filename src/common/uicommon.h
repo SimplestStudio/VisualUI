@@ -15,18 +15,20 @@ struct DECL_VISUALUI Margins {
     int left, top, right, bottom;
 };
 
-struct DECL_VISUALUI Rect {
-    Rect() noexcept;
-    Rect(int, int, int, int) noexcept;
-
-    int x, y, width, height;
-};
-
 struct DECL_VISUALUI Point {
     Point() noexcept;
     Point(int, int) noexcept;
 
     int x, y;
+};
+
+struct DECL_VISUALUI Rect {
+    Rect() noexcept;
+    Rect(int, int, int, int) noexcept;
+
+    bool contains(const Point &pt);
+
+    int x, y, width, height;
 };
 
 struct DECL_VISUALUI Size {

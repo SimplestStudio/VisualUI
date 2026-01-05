@@ -10,15 +10,6 @@ Margins::Margins(int l, int t, int r, int b) noexcept :
 {}
 
 
-Rect::Rect() noexcept :
-    x(0), y(0), width(0), height(0)
-{}
-
-Rect::Rect(int x, int y, int w, int h) noexcept :
-    x(x), y(y), width(w), height(h)
-{}
-
-
 Point::Point() noexcept :
     x(0), y(0)
 {}
@@ -27,6 +18,19 @@ Point::Point(int x, int y) noexcept :
     x(x), y(y)
 {}
 
+
+Rect::Rect() noexcept :
+    x(0), y(0), width(0), height(0)
+{}
+
+Rect::Rect(int x, int y, int w, int h) noexcept :
+    x(x), y(y), width(w), height(h)
+{}
+
+bool Rect::contains(const Point &pt)
+{
+    return (pt.x >= x && pt.x < x + width && pt.y >= y && pt.y < y + height);
+}
 
 Size::Size() noexcept :
     width(0), height(0)
