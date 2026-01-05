@@ -903,6 +903,160 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
 #endif
 }
 
+void UIDrawingEngine::DrawStringWithLayout(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline, int scrollOffsetX)
+{
+    const Metrics *metrics = m_ds->metrics();
+    Margins mrg;
+    GetTextMargins(mrg, metrics, m_dpi, m_rtl);
+#ifdef _WIN32
+    m_graphics->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
+
+    LOGFONTW logFont = {0};
+    GetObject(hFont, sizeof(LOGFONTW), &logFont);
+    Gdiplus::Font font(m_hdc, &logFont);
+    Gdiplus::RectF rcF(rc.left + mrg.left, rc.top + mrg.top, rc.right - rc.left - mrg.right - mrg.left, rc.bottom - rc.top - mrg.bottom - mrg.top);
+
+    if (m_rtl && !m_root_is_layered) {
+        m_origMatrix = new Gdiplus::Matrix;
+        m_graphics->GetTransform(m_origMatrix);
+        Gdiplus::Matrix rtlMatrix(-1.0f, 0.0f, 0.0f, 1.0f, float(m_rc->right + m_rc->left - 1), 0.0f);
+        m_graphics->SetTransform(&rtlMatrix);
+    }
+
+    HDC hdc = GetDC(m_hwnd);
+    HGDIOBJ oldFont = SelectObject(hdc, hFont);
+
+    TEXTMETRICW tm = {0};
+    GetTextMetricsW(hdc, &tm);
+    float baselineOffset = (float)tm.tmAscent;
+    int lineSpacing = tm.tmHeight + tm.tmExternalLeading;
+    float x = rcF.X;
+    float y = rcF.Y;
+    float width = 0;
+    float height = tm.tmHeight;
+    int len = text.length();
+
+    std::vector<int> dx(len);
+
+    GCP_RESULTS gcp = {0};
+    gcp.lStructSize = sizeof(gcp);
+    gcp.lpDx = dx.data();
+    gcp.nGlyphs = (UINT)dx.size();
+
+    GetCharacterPlacementW(hdc, text.c_str(), len, 0, &gcp, GCP_LIGATE | GCP_DIACRITIC);
+
+    SelectObject(hdc, oldFont);
+    ReleaseDC(m_hwnd, hdc);    
+
+    UINT algn = metrics->value(Metrics::TextAlignment);
+    // if (algn & Metrics::AlignHCenter) {
+    //     if (!multiline)
+    //         x += round((rcF.Width - width) / 2.0);
+    // } else
+    // if (algn & Metrics::AlignHRight) {
+    //     if (!multiline)
+    //         x += rcF.Width - width;
+    // }
+
+    if (algn & Metrics::AlignVCenter) {
+        y += round((rcF.Height - height) / 2.0);
+    } else
+    if (algn & Metrics::AlignVBottom) {
+        y += rcF.Height - height;
+    }
+
+    std::vector<Gdiplus::PointF> positions(len);
+    float posX = x + scrollOffsetX;
+    float posY = y + baselineOffset;
+       
+    for (size_t i = 0; i < len; ++i) {
+        positions[i] = Gdiplus::PointF(posX, posY);
+        posX += (float)dx[i];
+    }
+
+    Gdiplus::GraphicsState state = m_graphics->Save();
+    m_graphics->SetClip(rcF);
+
+    Gdiplus::SolidBrush brush(ColorFromColorRef(m_ds->palette()->color(Palette::Text)));
+    m_graphics->DrawDriverString((const UINT16*)text.c_str(), (INT)len, &font, &brush,
+                                 positions.data(), Gdiplus::DriverStringOptionsCmapLookup, nullptr);
+
+    m_graphics->Restore(state);
+    if (m_rtl && m_origMatrix) {
+        m_graphics->SetTransform(m_origMatrix);
+        delete m_origMatrix;
+        m_origMatrix = nullptr;
+    }
+#else
+    Rect _rc(rc.x + mrg.left, rc.y + mrg.top, rc.width - mrg.right - mrg.left, rc.height - mrg.bottom - mrg.top);
+
+    PangoLayout *lut = pango_cairo_create_layout(m_cr);
+    pango_layout_set_text(lut, text.c_str(), -1);
+    pango_layout_set_font_description(lut, hFont->desc);
+    pango_layout_set_wrap(lut, PANGO_WRAP_WORD);
+    pango_layout_set_width(lut, multiline ? _rc.width * PANGO_SCALE : -1);
+    pango_layout_set_height(lut, _rc.height * PANGO_SCALE);
+
+    if (hFont->underline || hFont->strikeOut) {
+        PangoAttrList* attrs = pango_attr_list_new();
+        if (hFont->underline) {
+            PangoAttribute* underline = pango_attr_underline_new(PANGO_UNDERLINE_SINGLE);
+            pango_attr_list_insert(attrs, underline);
+        }
+        if (hFont->strikeOut) {
+            PangoAttribute* strike = pango_attr_strikethrough_new(TRUE);
+            pango_attr_list_insert(attrs, strike);
+        }
+        pango_layout_set_attributes(lut, attrs);
+        pango_attr_list_unref(attrs);
+    }
+
+    int x = _rc.x;
+    int y = _rc.y;
+    int width, height;
+    pango_layout_get_size(lut, &width, &height);
+    width /= PANGO_SCALE;
+    height /= PANGO_SCALE;
+
+    PangoAlignment h_algn = PANGO_ALIGN_LEFT;
+    int algn = metrics->value(Metrics::TextAlignment);
+    if (algn & (m_rtl ? Metrics::AlignHRight : Metrics::AlignHLeft)) {
+        h_algn = PANGO_ALIGN_LEFT;
+    } else
+    if (algn & Metrics::AlignHCenter) {
+        h_algn = PANGO_ALIGN_CENTER;
+        if (!multiline)
+            x += round((_rc.width - width) / 2.0);
+    } else
+    if (algn & (m_rtl ? Metrics::AlignHLeft : Metrics::AlignHRight)) {
+        h_algn = PANGO_ALIGN_RIGHT;
+        if (!multiline)
+            x += _rc.width - width;
+    }
+
+    if (algn & Metrics::AlignVCenter)
+        y += round((_rc.height - height) / 2.0);
+    else
+    if (algn & Metrics::AlignVBottom)
+        y += _rc.height - height;
+
+    pango_layout_set_alignment(lut, h_algn);
+
+    cairo_save(m_cr);
+    cairo_rectangle(m_cr, x, y, _rc.width, _rc.height);
+    cairo_clip(m_cr);
+    cairo_translate(m_cr, scrollOffsetX, 0);
+    cairo_move_to(m_cr, x, y);
+
+    COLORREF rgb = m_ds->palette()->color(Palette::Text);
+    cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
+    pango_cairo_show_layout(m_cr, lut);
+
+    cairo_restore(m_cr);
+    g_object_unref(lut);
+#endif
+}
+
 void UIDrawingEngine::DrawIcon(PlatformIcon hIcon) const
 {
     const Metrics *metrics = m_ds->metrics();
