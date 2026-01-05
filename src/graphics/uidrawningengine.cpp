@@ -88,6 +88,19 @@ static void RoundedPath(cairo_t *cr, unsigned char corner, double x, double y, d
 }
 #endif
 
+static inline void GetTextMargins(Margins &mrg, const Metrics *metrics, double dpi, bool rtl) noexcept
+{
+#ifdef _WIN32
+    mrg.left = metrics->value(Metrics::TextMarginLeft) * dpi;
+    mrg.right = metrics->value(Metrics::TextMarginRight) * dpi;
+#else
+    mrg.left = (rtl ? metrics->value(Metrics::TextMarginRight) : metrics->value(Metrics::TextMarginLeft)) * dpi;
+    mrg.right = (rtl ? metrics->value(Metrics::TextMarginLeft) : metrics->value(Metrics::TextMarginRight)) * dpi;
+#endif
+    mrg.top = metrics->value(Metrics::TextMarginTop) * dpi;
+    mrg.bottom = metrics->value(Metrics::TextMarginBottom) * dpi;
+}
+
 static inline void GetIconMargins(Margins &mrg, const Metrics *metrics, double dpi, bool rtl) noexcept
 {
 #ifdef _WIN32
@@ -114,8 +127,10 @@ static inline void GetIconPlacement(Rect &rc, const Rect &src_rc, const Margins 
     if (algn & (rtl ? Metrics::AlignHRight : Metrics::AlignHLeft))
 #endif
         rc.x = mrg.left + src_rc.x;
+    else
     if (algn & Metrics::AlignHCenter)
         rc.x = mrg.left + src_rc.x + (src_rc.width - rc.width) / 2;
+    else
 #ifdef _WIN32
     if (algn & Metrics::AlignHRight)
 #else
@@ -124,8 +139,10 @@ static inline void GetIconPlacement(Rect &rc, const Rect &src_rc, const Margins 
         rc.x = src_rc.x + src_rc.width - mrg.right - rc.width;
     if (algn & Metrics::AlignVTop)
         rc.y = mrg.top + src_rc.y;
+    else
     if (algn & Metrics::AlignVCenter)
         rc.y = mrg.top + src_rc.y + (src_rc.height - rc.height) / 2;
+    else
     if (algn & Metrics::AlignVBottom)
         rc.y = src_rc.y + src_rc.height - mrg.bottom - rc.height;
 }
@@ -759,36 +776,40 @@ void UIDrawingEngine::DrawProgressBar(int progress, int pulse_pos) const noexcep
 #endif
 }
 
-void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline, RECT *bounds)
+void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline)
 {
     const Metrics *metrics = m_ds->metrics();
-    int mrg_top = metrics->value(Metrics::TextMarginTop) * m_dpi;
-    int mrg_left = (m_rtl ? metrics->value(Metrics::TextMarginRight) : metrics->value(Metrics::TextMarginLeft)) * m_dpi;
-    int mrg_right = (m_rtl ? metrics->value(Metrics::TextMarginLeft) : metrics->value(Metrics::TextMarginRight)) * m_dpi;
-    int mrg_bottom = metrics->value(Metrics::TextMarginBottom) * m_dpi;
+    Margins mrg;
+    GetTextMargins(mrg, metrics, m_dpi, m_rtl);
 #ifdef _WIN32
-    m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
     m_graphics->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
 
     LOGFONTW logFont = {0};
     GetObject(hFont, sizeof(LOGFONTW), &logFont);
     Gdiplus::Font font(m_hdc, &logFont);
-    Gdiplus::RectF rcF(rc.left + mrg_left, rc.top + mrg_top, rc.right - rc.left - mrg_right - mrg_left, rc.bottom - rc.top - mrg_bottom - mrg_top);
-    Gdiplus::StringAlignment h_algn, v_algn;
+    Gdiplus::RectF rcF(rc.left + mrg.left, rc.top + mrg.top, rc.right - rc.left - mrg.right - mrg.left, rc.bottom - rc.top - mrg.bottom - mrg.top);
+
+    Gdiplus::StringAlignment h_algn = Gdiplus::StringAlignmentNear, v_algn = Gdiplus::StringAlignmentNear;
     UINT algn = metrics->value(Metrics::TextAlignment);
-    if (algn & Metrics::AlignHLeft)
-        h_algn = Gdiplus::StringAlignmentNear;
+    // if (algn & Metrics::AlignHLeft)
+    //     h_algn = Gdiplus::StringAlignmentNear;
+    // else
     if (algn & Metrics::AlignHCenter)
         h_algn = Gdiplus::StringAlignmentCenter;
+    else
     if (algn & Metrics::AlignHRight)
         h_algn = Gdiplus::StringAlignmentFar;
-    if (algn & Metrics::AlignVTop)
-        v_algn = Gdiplus::StringAlignmentNear;
+
+    // if (algn & Metrics::AlignVTop)
+    //     v_algn = Gdiplus::StringAlignmentNear;
+    // else
     if (algn & Metrics::AlignVCenter)
         v_algn = Gdiplus::StringAlignmentCenter;
+    else
     if (algn & Metrics::AlignVBottom)
         v_algn = Gdiplus::StringAlignmentFar;
-    Gdiplus::StringFormat strFmt;
+
+    Gdiplus::StringFormat strFmt(Gdiplus::StringFormat::GenericTypographic());
     strFmt.SetAlignment(h_algn);
     strFmt.SetLineAlignment(v_algn);
     INT flags = multiline ? Gdiplus::StringFormatFlagsLineLimit : Gdiplus::StringFormatFlagsNoWrap;
@@ -801,33 +822,19 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
             m_graphics->SetTransform(&rtlMatrix);
         }
     }
-    strFmt.SetFormatFlags(flags);
+    strFmt.SetFormatFlags(strFmt.GetFormatFlags() | flags);
+
     Gdiplus::SolidBrush brush(ColorFromColorRef(m_ds->palette()->color(Palette::Text)));
     m_graphics->DrawString(text.c_str(), -1, &font, rcF, &strFmt, &brush);
-    if (bounds) {
-        Gdiplus::CharacterRange range(0, text.length());
-        strFmt.SetFormatFlags(strFmt.GetFormatFlags() | Gdiplus::StringFormatFlagsMeasureTrailingSpaces);
-        strFmt.SetMeasurableCharacterRanges(1, &range);
-        Gdiplus::Region rgn;
-        m_graphics->MeasureCharacterRanges(text.c_str(), text.length(), &font, rcF, &strFmt, 1, &rgn);
-        Gdiplus::RectF bnds;
-        rgn.GetBounds(&bnds, m_graphics);
-        bounds->left = bnds.X;
-        bounds->top = bnds.Y;
-        bounds->right = round(bnds.X + bnds.Width);
-        bounds->bottom = round(bnds.Y + bnds.Height);
-    }
-    m_graphics->SetSmoothingMode(Gdiplus::SmoothingModeDefault);
+
     if (m_rtl && m_origMatrix) {
         m_graphics->SetTransform(m_origMatrix);
         delete m_origMatrix;
         m_origMatrix = nullptr;
     }
 #else
-    Rect _rc(rc.x + mrg_left, rc.y + mrg_top, rc.width - mrg_right - mrg_left, rc.height - mrg_bottom - mrg_top);
+    Rect _rc(rc.x + mrg.left, rc.y + mrg.top, rc.width - mrg.right - mrg.left, rc.height - mrg.bottom - mrg.top);
 
-    COLORREF rgb = m_ds->palette()->color(Palette::Text);
-    cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
     PangoLayout *lut = pango_cairo_create_layout(m_cr);
     pango_layout_set_text(lut, text.c_str(), -1);
     pango_layout_set_font_description(lut, hFont->desc);
@@ -860,21 +867,24 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
     int algn = metrics->value(Metrics::TextAlignment);
     if (algn & (m_rtl ? Metrics::AlignHRight : Metrics::AlignHLeft)) {
         h_algn = PANGO_ALIGN_LEFT;
-    }
+    } else
     if (algn & Metrics::AlignHCenter) {
         h_algn = PANGO_ALIGN_CENTER;
         if (!multiline)
             text_x += round((_rc.width - txt_w) / 2.0);
-    }
+    } else
     if (algn & (m_rtl ? Metrics::AlignHLeft : Metrics::AlignHRight)) {
         h_algn = PANGO_ALIGN_RIGHT;
         if (!multiline)
             text_x += _rc.width - txt_w;
     }
+
     if (algn & Metrics::AlignVTop)
         text_y += 0;
+    else
     if (algn & Metrics::AlignVCenter)
         text_y += round((_rc.height - txt_h) / 2.0);
+    else
     if (algn & Metrics::AlignVBottom)
         text_y += _rc.height - txt_h;
 
@@ -883,15 +893,13 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
     cairo_rectangle(m_cr, text_x, text_y, _rc.width, _rc.height);
     cairo_clip(m_cr);
     cairo_move_to(m_cr, text_x, text_y);
+
+    COLORREF rgb = m_ds->palette()->color(Palette::Text);
+    cairo_set_source_rgb(m_cr, GetRValue(rgb), GetGValue(rgb), GetBValue(rgb));
     pango_cairo_show_layout(m_cr, lut);
+
     cairo_restore(m_cr);
     g_object_unref(lut);
-    if (bounds) {
-        bounds->x = text_x;
-        bounds->y = text_y;
-        bounds->width = txt_w;
-        bounds->height = txt_h;
-    }
 #endif
 }
 

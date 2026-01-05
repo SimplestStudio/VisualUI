@@ -40,7 +40,7 @@ public:
     void DrawRadioButton(const tstring &text, PlatformFont hFont, RECT &check_rc, bool checked = false) noexcept;
     void DrawToggleButton(const tstring &text, PlatformFont hFont, RECT &check_rc, bool checked = false) noexcept;
     void DrawProgressBar(int progress, int pulse_pos) const noexcept;
-    void DrawString(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline = false, RECT *bounds = nullptr);
+    void DrawString(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline = false);
     void DrawIcon(PlatformIcon hIcon) const;
     void DrawShadow() const noexcept;
 #ifdef _WIN32
