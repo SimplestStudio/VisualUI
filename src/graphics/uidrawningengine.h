@@ -41,7 +41,7 @@ public:
     void DrawToggleButton(const tstring &text, PlatformFont hFont, RECT &check_rc, bool checked = false) noexcept;
     void DrawProgressBar(int progress, int pulse_pos) const noexcept;
     void DrawString(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline = false);
-    void DrawStringWithLayout(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline = false, int scrollOffsetX = 0);
+    void DrawStringWithLayout(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline = false, int scrollOffsetX = 0, int scrollOffsetY = 0);
     void DrawIcon(PlatformIcon hIcon) const;
     void DrawShadow() const noexcept;
 #ifdef _WIN32
