@@ -349,7 +349,7 @@ void UIAbstractScrollArea::onMouseWheel(int delta)
 
 void UIAbstractScrollArea::createScrollBars()
 {
-    if (!m_verticalScrollBar) {
+    if (!m_verticalScrollBar && m_verticalScrollBarPolicy != ScrollBarAlwaysOff) {
         m_verticalScrollBar = new UIScrollBar(UIScrollBar::Vertical, this);
         m_verticalScrollBar->setRange(0, 0);
         m_verticalScrollBar->setBaseSize(5, 40);
@@ -365,7 +365,7 @@ void UIAbstractScrollArea::createScrollBars()
         });
     }
 
-    if (!m_horizontalScrollBar) {
+    if (!m_horizontalScrollBar && m_horizontalScrollBarPolicy != ScrollBarAlwaysOff) {
         m_horizontalScrollBar = new UIScrollBar(UIScrollBar::Horizontal, this);
         m_horizontalScrollBar->setRange(0, 0);
         m_horizontalScrollBar->setBaseSize(40, 5);
@@ -390,12 +390,15 @@ void UIAbstractScrollArea::updateScrollBarGeometry()
     Size sz = size();
     int sbOffset = SCROLLBAR_OFFSET * m_dpi_ratio;
     
-    if ((state.needVertical || state.needHorizontal) && (!m_verticalScrollBar || !m_horizontalScrollBar)) {
+    // Create scrollbars if needed (respects policy in createScrollBars)
+    bool needVerticalCreate = state.needVertical && !m_verticalScrollBar && m_verticalScrollBarPolicy != ScrollBarAlwaysOff;
+    bool needHorizontalCreate = state.needHorizontal && !m_horizontalScrollBar && m_horizontalScrollBarPolicy != ScrollBarAlwaysOff;
+    if (needVerticalCreate || needHorizontalCreate) {
         createScrollBars();
     }
     
     // Vertical ScrollBar
-    if (state.needVertical) {
+    if (state.needVertical && m_verticalScrollBar) {
         int maxOffset = m_contentHeight - state.availableHeight;
         m_verticalScrollBar->setRange(0, maxOffset);
         m_verticalScrollBar->setTrackLength(state.availableHeight);
@@ -419,7 +422,7 @@ void UIAbstractScrollArea::updateScrollBarGeometry()
     }
 
     // Horizontal ScrollBar
-    if (state.needHorizontal) {
+    if (state.needHorizontal && m_horizontalScrollBar) {
         int maxOffset = m_contentWidth - state.availableWidth;
         m_horizontalScrollBar->setRange(0, maxOffset);
         m_horizontalScrollBar->setTrackLength(state.availableWidth);
