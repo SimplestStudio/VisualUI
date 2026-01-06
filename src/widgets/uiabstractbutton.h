@@ -11,7 +11,7 @@ public:
     explicit UIAbstractButton(UIWidget *parent = nullptr, const tstring &text = {});
     virtual ~UIAbstractButton();
 
-    virtual void setText(const tstring &text) noexcept;
+    virtual void setText(const tstring &text);
     void setChecked(bool checked);
     void setSelected(bool enabled) noexcept;
     void setSelectable(bool enabled) noexcept;

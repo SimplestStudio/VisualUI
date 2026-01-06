@@ -34,7 +34,7 @@ UIAbstractButton::~UIAbstractButton()
     }
 }
 
-void UIAbstractButton::setText(const tstring &text) noexcept
+void UIAbstractButton::setText(const tstring &text)
 {
     m_text = text;
     update();

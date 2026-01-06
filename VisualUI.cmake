@@ -44,6 +44,7 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/widgets/uiabstractwindow.h
     ${UICLASSES}/widgets/uiabstractpopup.h
     ${UICLASSES}/widgets/uiabstractscrollarea.h
+    ${UICLASSES}/widgets/uiabstracteditcontrol.h
     ${UICLASSES}/widgets/uitooltip.h
     ${UICLASSES}/widgets/uimenu.h
     ${UICLASSES}/widgets/uiwidget.h
@@ -97,6 +98,7 @@ set(VISUALUI_SOURCES
     ${UICLASSES}/widgets/uiabstractwindow.cpp
     ${UICLASSES}/widgets/uiabstractpopup.cpp
     ${UICLASSES}/widgets/uiabstractscrollarea.cpp
+    ${UICLASSES}/widgets/uiabstracteditcontrol.cpp
     ${UICLASSES}/widgets/uitooltip.cpp
     ${UICLASSES}/widgets/uimenu.cpp
     ${UICLASSES}/widgets/uiwidget.cpp
