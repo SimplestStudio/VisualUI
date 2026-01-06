@@ -61,7 +61,7 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/widgets/uiscrollarea.h
     ${UICLASSES}/widgets/uilistview.h
     ${UICLASSES}/widgets/uilineedit.h
-    # ${UICLASSES}/widgets/uitextedit.h
+    ${UICLASSES}/widgets/uitextedit.h
     ${UICLASSES}/widgets/uicombobox.h
     ${UICLASSES}/layout/uispacer.h
     ${UICLASSES}/layout/uilayoutitem.h
@@ -115,7 +115,7 @@ set(VISUALUI_SOURCES
     ${UICLASSES}/widgets/uiscrollarea.cpp
     ${UICLASSES}/widgets/uilistview.cpp
     ${UICLASSES}/widgets/uilineedit.cpp
-    # ${UICLASSES}/widgets/uitextedit.cpp
+    ${UICLASSES}/widgets/uitextedit.cpp
     ${UICLASSES}/widgets/uicombobox.cpp
     ${UICLASSES}/layout/uispacer.cpp
     ${UICLASSES}/layout/uilayoutitem.cpp

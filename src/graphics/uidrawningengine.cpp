@@ -903,7 +903,7 @@ void UIDrawingEngine::DrawString(const RECT &rc, const tstring &text, PlatformFo
 #endif
 }
 
-void UIDrawingEngine::DrawStringWithLayout(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline, int scrollOffsetX)
+void UIDrawingEngine::DrawStringWithLayout(const RECT &rc, const tstring &text, PlatformFont hFont, bool multiline, int scrollOffsetX, int scrollOffsetY)
 {
     const Metrics *metrics = m_ds->metrics();
     Margins mrg;
@@ -930,56 +930,116 @@ void UIDrawingEngine::DrawStringWithLayout(const RECT &rc, const tstring &text, 
     GetTextMetricsW(hdc, &tm);
     float baselineOffset = (float)tm.tmAscent;
     int lineSpacing = tm.tmHeight + tm.tmExternalLeading;
+
     float x = rcF.X;
     float y = rcF.Y;
-    float width = 0;
-    float height = tm.tmHeight;
-    int len = text.length();
-
-    std::vector<int> dx(len);
-
-    GCP_RESULTS gcp = {0};
-    gcp.lStructSize = sizeof(gcp);
-    gcp.lpDx = dx.data();
-    gcp.nGlyphs = (UINT)dx.size();
-
-    GetCharacterPlacementW(hdc, text.c_str(), len, 0, &gcp, GCP_LIGATE | GCP_DIACRITIC);
-
-    SelectObject(hdc, oldFont);
-    ReleaseDC(m_hwnd, hdc);    
+    int len = (int)text.length();
 
     UINT algn = metrics->value(Metrics::TextAlignment);
-    // if (algn & Metrics::AlignHCenter) {
-    //     if (!multiline)
-    //         x += round((rcF.Width - width) / 2.0);
-    // } else
-    // if (algn & Metrics::AlignHRight) {
-    //     if (!multiline)
-    //         x += rcF.Width - width;
-    // }
-
-    if (algn & Metrics::AlignVCenter) {
-        y += round((rcF.Height - height) / 2.0);
-    } else
-    if (algn & Metrics::AlignVBottom) {
-        y += rcF.Height - height;
+    if (!multiline) {
+        float height = tm.tmHeight;
+        if (algn & Metrics::AlignVCenter) {
+            y += roundf((rcF.Height - height) / 2.0f);
+        } else if (algn & Metrics::AlignVBottom) {
+            y += rcF.Height - height;
+        }
     }
 
-    std::vector<Gdiplus::PointF> positions(len);
-    float posX = x + scrollOffsetX;
-    float posY = y + baselineOffset;
-       
-    for (size_t i = 0; i < len; ++i) {
-        positions[i] = Gdiplus::PointF(posX, posY);
-        posX += (float)dx[i];
+    // Viewport bounds
+    float viewportTop = rcF.Y - lineSpacing;
+    float viewportBottom = rcF.Y + rcF.Height + lineSpacing;
+    float viewportLeft = rcF.X - 6.0f * m_dpi;
+    float viewportRight = rcF.X + rcF.Width + 6.0f * m_dpi;
+
+    std::wstring filteredText;
+    std::vector<Gdiplus::PointF> positions;
+    filteredText.reserve(1024); // heuristic evaluation of visible symbols
+    positions.reserve(1024);
+
+    double currentX = x + scrollOffsetX;
+    double currentY = y + baselineOffset + scrollOffsetY;
+
+    constexpr size_t MAX_CHUNK_SIZE = 8192;
+    bool stopProcessing = false;
+    for (size_t offset = 0; offset < (size_t)len && !stopProcessing; ) {
+        size_t chunkLen = std::min<int>(MAX_CHUNK_SIZE, (size_t)len - offset);
+
+        std::vector<int> dx(chunkLen);
+        GCP_RESULTS gcp = {0};
+        gcp.lStructSize = sizeof(gcp);
+        gcp.lpDx = dx.data();
+        gcp.nGlyphs = (UINT)chunkLen;
+
+        GetCharacterPlacementW(hdc, text.c_str() + offset, (int)chunkLen, 0, &gcp, GCP_LIGATE | GCP_DIACRITIC);
+
+        for (size_t i = 0; i < chunkLen && !stopProcessing; ++i) {
+            wchar_t ch = text[offset + i];
+            int charWidth = dx[i];
+
+            if (multiline) {
+                if (ch == L'\n') {
+                    currentX = x + scrollOffsetX;
+                    currentY += lineSpacing;
+                    if (currentY > viewportBottom) {
+                        stopProcessing = true;
+                        break;
+                    }
+                    continue;
+                } else if (ch == L'\r') {
+                    continue;
+                }
+
+                // Word wrap
+                double lineWidthSoFar = currentX - (x + scrollOffsetX);
+                if (lineWidthSoFar > 0 && lineWidthSoFar + charWidth > rcF.Width) {
+                    currentX = x + scrollOffsetX;
+                    currentY += lineSpacing;
+                    if (currentY > viewportBottom) {
+                        stopProcessing = true;
+                        break;
+                    }
+                }
+
+                // Culling
+                bool inVert = (currentY >= viewportTop && currentY <= viewportBottom);
+                bool inHoriz = (currentX + charWidth >= viewportLeft && currentX <= viewportRight);
+
+                if (inVert && inHoriz) {
+                    filteredText.push_back(ch);
+                    positions.emplace_back((float)currentX, (float)currentY);
+                }
+
+                currentX += charWidth;
+
+            } else {
+                if (ch == L'\n' || ch == L'\r') {
+                    continue;
+                }
+
+                bool inHoriz = (currentX + charWidth >= viewportLeft && currentX <= viewportRight);
+                if (inHoriz) {
+                    filteredText.push_back(ch);
+                    positions.emplace_back((float)currentX, (float)currentY);
+                }
+
+                currentX += charWidth;
+            }
+        }
+
+        offset += chunkLen;
     }
+
+    SelectObject(hdc, oldFont);
+    ReleaseDC(m_hwnd, hdc);
 
     Gdiplus::GraphicsState state = m_graphics->Save();
     m_graphics->SetClip(rcF);
 
-    Gdiplus::SolidBrush brush(ColorFromColorRef(m_ds->palette()->color(Palette::Text)));
-    m_graphics->DrawDriverString((const UINT16*)text.c_str(), (INT)len, &font, &brush,
-                                 positions.data(), Gdiplus::DriverStringOptionsCmapLookup, nullptr);
+    if (!filteredText.empty()) {
+        Gdiplus::SolidBrush brush(ColorFromColorRef(m_ds->palette()->color(Palette::Text)));
+        m_graphics->DrawDriverString((const UINT16*)filteredText.c_str(), (INT)filteredText.length(), &font, &brush,
+                                     positions.data(), Gdiplus::DriverStringOptionsCmapLookup, nullptr);
+    }
 
     m_graphics->Restore(state);
     if (m_rtl && m_origMatrix) {
@@ -993,9 +1053,10 @@ void UIDrawingEngine::DrawStringWithLayout(const RECT &rc, const tstring &text, 
     PangoLayout *lut = pango_cairo_create_layout(m_cr);
     pango_layout_set_text(lut, text.c_str(), -1);
     pango_layout_set_font_description(lut, hFont->desc);
-    pango_layout_set_wrap(lut, PANGO_WRAP_WORD);
+    pango_layout_set_wrap(lut, PANGO_WRAP_WORD_CHAR);
     pango_layout_set_width(lut, multiline ? _rc.width * PANGO_SCALE : -1);
-    pango_layout_set_height(lut, _rc.height * PANGO_SCALE);
+    if (!multiline)
+        pango_layout_set_height(lut, _rc.height * PANGO_SCALE);
 
     if (hFont->underline || hFont->strikeOut) {
         PangoAttrList* attrs = pango_attr_list_new();
@@ -1034,18 +1095,20 @@ void UIDrawingEngine::DrawStringWithLayout(const RECT &rc, const tstring &text, 
             x += _rc.width - width;
     }
 
-    if (algn & Metrics::AlignVCenter)
-        y += round((_rc.height - height) / 2.0);
-    else
-    if (algn & Metrics::AlignVBottom)
-        y += _rc.height - height;
+    if (!multiline) {
+        if (algn & Metrics::AlignVCenter)
+            y += round((_rc.height - height) / 2.0);
+        else
+        if (algn & Metrics::AlignVBottom)
+            y += _rc.height - height;
+    }
 
     pango_layout_set_alignment(lut, h_algn);
 
     cairo_save(m_cr);
-    cairo_rectangle(m_cr, x, y, _rc.width, _rc.height);
+    cairo_rectangle(m_cr, _rc.x, _rc.y, _rc.width, _rc.height);
     cairo_clip(m_cr);
-    cairo_translate(m_cr, scrollOffsetX, 0);
+    cairo_translate(m_cr, scrollOffsetX, scrollOffsetY);
     cairo_move_to(m_cr, x, y);
 
     COLORREF rgb = m_ds->palette()->color(Palette::Text);
@@ -1207,7 +1270,7 @@ void UIDrawingEngine::DrawEmfIcon(Gdiplus::Metafile *hEmf, float angle) noexcept
 
 void UIDrawingEngine::DrawImage(Gdiplus::Bitmap *hBmp) const noexcept
 {
-    const Metrics *metrics = m_ds->metrics();    
+    const Metrics *metrics = m_ds->metrics();
     Margins mrg;
     GetIconMargins(mrg, metrics, m_dpi, m_rtl);
     Rect dst_rc;
