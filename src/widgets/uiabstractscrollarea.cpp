@@ -351,6 +351,7 @@ void UIAbstractScrollArea::createScrollBars()
 {
     if (!m_verticalScrollBar && m_verticalScrollBarPolicy != ScrollBarAlwaysOff) {
         m_verticalScrollBar = new UIScrollBar(UIScrollBar::Vertical, this);
+        m_verticalScrollBar->setObjectGroupId(_T("ScrollBar"));
         m_verticalScrollBar->setRange(0, 0);
         m_verticalScrollBar->setBaseSize(5, 40);
         m_verticalScrollBar->hide();
@@ -367,6 +368,7 @@ void UIAbstractScrollArea::createScrollBars()
 
     if (!m_horizontalScrollBar && m_horizontalScrollBarPolicy != ScrollBarAlwaysOff) {
         m_horizontalScrollBar = new UIScrollBar(UIScrollBar::Horizontal, this);
+        m_horizontalScrollBar->setObjectGroupId(_T("ScrollBar"));
         m_horizontalScrollBar->setRange(0, 0);
         m_horizontalScrollBar->setBaseSize(40, 5);
         m_horizontalScrollBar->hide();
