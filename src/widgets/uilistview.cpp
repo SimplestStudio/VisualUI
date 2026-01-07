@@ -13,6 +13,7 @@ UIListView::UIListView(UIWidget *parent) :
     m_scrollMode(ScrollPerItem)
 {
     UIWidget *content = new UIWidget(this);
+    content->setObjectGroupId(_T("ListViewViewport"));
     setContentWidget(content);
     setWheelScrollStep(m_rowBaseHeight);
 
