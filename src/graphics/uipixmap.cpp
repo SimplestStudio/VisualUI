@@ -11,10 +11,9 @@ UIPixmap::UIPixmap(const UIPixmap &other) :
     UIPixmap()
 {
 #ifdef _WIN32
-    if (other.m_hBmp && other.m_hBmp->GetLastStatus() == Gdiplus::Ok) {
-        Gdiplus::Bitmap *hBmp = other.m_hBmp;
+    Gdiplus::Bitmap *hBmp = other.m_hBmp;
+    if (hBmp)
         m_hBmp = hBmp->Clone(0, 0, hBmp->GetWidth(), hBmp->GetHeight(), hBmp->GetPixelFormat());
-    }
 #else
     if (other.m_hBmp)
         m_hBmp = gdk_pixbuf_copy(other.m_hBmp);
@@ -23,13 +22,8 @@ UIPixmap::UIPixmap(const UIPixmap &other) :
 
 UIPixmap::UIPixmap(UIPixmap&& other) noexcept
 {
-#ifdef _WIN32
     m_hBmp = other.m_hBmp;
     other.m_hBmp = nullptr;
-#else
-    m_hBmp = other.m_hBmp;
-    other.m_hBmp = nullptr;
-#endif
 }
 
 UIPixmap::UIPixmap(const tstring &path) :
@@ -44,33 +38,18 @@ UIPixmap::UIPixmap(const tstring &path) :
 
 UIPixmap::~UIPixmap()
 {
-#ifdef _WIN32
-    if (m_hBmp) {
-        delete m_hBmp, m_hBmp = nullptr;
-    }
-#else
-    if (m_hBmp) {
-        g_object_unref(m_hBmp);
-        m_hBmp = nullptr;
-    }
-#endif
+    reset();
 }
 
 UIPixmap& UIPixmap::operator=(const UIPixmap &other)
 {
     if (this != &other) {
+        reset();
 #ifdef _WIN32
-        if (m_hBmp)
-            delete m_hBmp, m_hBmp = nullptr;
         Gdiplus::Bitmap *hBmp = other.m_hBmp;
-        if (hBmp && hBmp->GetLastStatus() == Gdiplus::Ok) {
+        if (hBmp)
             m_hBmp = hBmp->Clone(0, 0, hBmp->GetWidth(), hBmp->GetHeight(), hBmp->GetPixelFormat());
-        }
 #else
-        if (m_hBmp) {
-            g_object_unref(m_hBmp);
-            m_hBmp = nullptr;
-        }
         if (other.m_hBmp)
             m_hBmp = gdk_pixbuf_copy(other.m_hBmp);
 #endif
@@ -81,28 +60,28 @@ UIPixmap& UIPixmap::operator=(const UIPixmap &other)
 UIPixmap& UIPixmap::operator=(UIPixmap&& other) noexcept
 {
     if (this != &other) {
-#ifdef _WIN32
-        if (m_hBmp)
-            delete m_hBmp;
+        reset();
         m_hBmp = other.m_hBmp;
         other.m_hBmp = nullptr;
-#else
-        if (m_hBmp)
-            g_object_unref(m_hBmp);
-        m_hBmp = other.m_hBmp;
-        other.m_hBmp = nullptr;
-#endif
     }
     return *this;
 }
 
+void UIPixmap::reset()
+{
+    if (m_hBmp) {
+#ifdef _WIN32
+        delete m_hBmp;
+#else
+        g_object_unref(m_hBmp);
+#endif
+        m_hBmp = nullptr;
+    }
+}
+
 bool UIPixmap::isValid() const noexcept
 {
-#ifdef _WIN32
-    return (m_hBmp && m_hBmp->GetLastStatus() == Gdiplus::Ok);
-#else
-    return (m_hBmp);
-#endif
+    return (m_hBmp != nullptr);
 }
 
 Size UIPixmap::imageSize() const noexcept
@@ -125,10 +104,9 @@ Size UIPixmap::imageSize() const noexcept
 UIPixmap UIPixmap::scaled(int width, int height) const
 {
     UIPixmap result;
-#ifdef _WIN32
     if (!m_hBmp || width <= 0 || height <= 0)
         return result;
-
+#ifdef _WIN32
     Gdiplus::Bitmap *scaled = new Gdiplus::Bitmap(width, height, m_hBmp->GetPixelFormat());
     if (scaled) {
         Gdiplus::Graphics gr(scaled);
@@ -138,9 +116,6 @@ UIPixmap UIPixmap::scaled(int width, int height) const
         result.m_hBmp = scaled;
     }
 #else
-    if (!m_hBmp || width <= 0 || height <= 0)
-        return result;
-
     GdkPixbuf *scaled = gdk_pixbuf_scale_simple(m_hBmp, width, height, GDK_INTERP_BILINEAR);
     if (scaled)
         result.m_hBmp = scaled;
