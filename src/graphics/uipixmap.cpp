@@ -1,4 +1,5 @@
 #include "uipixmap.h"
+#include <vector>
 
 
 UIPixmap::UIPixmap() :
@@ -120,5 +121,83 @@ UIPixmap UIPixmap::scaled(int width, int height) const
     if (scaled)
         result.m_hBmp = scaled;
 #endif
+    return result;
+}
+
+UIPixmap UIPixmap::fromRawData(const uint8_t *data, int width, int height, bool hasAlpha)
+{
+    if (!data || width <= 0 || height <= 0)
+        return UIPixmap{};
+
+#ifdef _WIN32
+    size_t pixelCount = static_cast<size_t>(width) * static_cast<size_t>(height);
+
+    std::vector<Gdiplus::ARGB> pixels(pixelCount);
+
+    for (size_t i = 0; i < pixelCount; ++i) {
+        uint8_t r = data[i * 4 + 0];
+        uint8_t g = data[i * 4 + 1];
+        uint8_t b = data[i * 4 + 2];
+        uint8_t a = hasAlpha ? data[i * 4 + 3] : 255;
+
+        // Premultiply alpha for PARGB format
+        if (hasAlpha) {
+            r = static_cast<uint8_t>((r * a + 127) / 255);
+            g = static_cast<uint8_t>((g * a + 127) / 255);
+            b = static_cast<uint8_t>((b * a + 127) / 255);
+        }
+
+        pixels[i] = (static_cast<Gdiplus::ARGB>(a) << 24) |
+                    (static_cast<Gdiplus::ARGB>(r) << 16) |
+                    (static_cast<Gdiplus::ARGB>(g) << 8)  |
+                    (static_cast<Gdiplus::ARGB>(b));
+    }
+
+    Gdiplus::Bitmap* bitmap = new Gdiplus::Bitmap(width, height, PixelFormat32bppPARGB);
+    if (bitmap->GetLastStatus() != Gdiplus::Ok) {
+        delete bitmap;
+        return UIPixmap{};
+    }
+
+    Gdiplus::Rect rect(0, 0, width, height);
+    Gdiplus::BitmapData bitmapData;
+    Gdiplus::Status status = bitmap->LockBits(&rect, Gdiplus::ImageLockModeWrite, PixelFormat32bppPARGB, &bitmapData);
+    if (status != Gdiplus::Ok) {
+        delete bitmap;
+        return UIPixmap{};
+    }
+
+    BYTE* dst = static_cast<BYTE*>(bitmapData.Scan0);
+    const BYTE* src = reinterpret_cast<const BYTE*>(pixels.data());
+    int srcStride = width * 4;
+    int dstStride = bitmapData.Stride;
+
+    for (int y = 0; y < height; ++y)
+        memcpy(dst + y * dstStride, src + y * srcStride, srcStride);
+
+    bitmap->UnlockBits(&bitmapData);
+#else
+    GdkPixbuf *bitmap = gdk_pixbuf_new(GDK_COLORSPACE_RGB, hasAlpha ? TRUE : FALSE, 8, width, height);
+    if (!bitmap) return UIPixmap{};
+
+    guchar *pixels = gdk_pixbuf_get_pixels(bitmap);
+    int rowstride = gdk_pixbuf_get_rowstride(bitmap);
+    int nChannels = gdk_pixbuf_get_n_channels(bitmap);
+
+    // Copy pixel data from source (always RGBA, 4 bytes per pixel)
+    for (int y = 0; y < height; ++y) {
+        guchar *row = pixels + y * rowstride;
+        for (int x = 0; x < width; ++x) {
+            int srcIdx = (y * width + x) * 4;
+            row[x * nChannels + 0] = data[srcIdx + 0];  // R
+            row[x * nChannels + 1] = data[srcIdx + 1];  // G
+            row[x * nChannels + 2] = data[srcIdx + 2];  // B
+            if (hasAlpha)
+                row[x * nChannels + 3] = data[srcIdx + 3];  // A
+        }
+    }
+#endif
+    UIPixmap result;
+    result.m_hBmp = bitmap;
     return result;
 }

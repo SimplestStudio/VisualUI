@@ -28,6 +28,8 @@ public:
     Size imageSize() const noexcept;
     UIPixmap scaled(int width, int height) const;
 
+    static UIPixmap fromRawData(const uint8_t* data, int width, int height, bool hasAlpha = true);
+
 protected:
     friend class UIconHandler;
     PlatformBitmap *m_hBmp;
