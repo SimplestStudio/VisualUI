@@ -771,12 +771,12 @@ bool UIWindow::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 
         MINMAXINFO* minMaxInfo = (MINMAXINFO*)lParam;
         if (m_isResizable) {
-            minMaxInfo->ptMinTrackSize.x = m_min_size.width;
-            minMaxInfo->ptMinTrackSize.y = m_min_size.height;
+            minMaxInfo->ptMinTrackSize.x = m_min_size.width * m_dpi_ratio;
+            minMaxInfo->ptMinTrackSize.y = m_min_size.height * m_dpi_ratio;
             if (m_max_size.width != SM_CXMAXTRACK)
-                minMaxInfo->ptMaxTrackSize.x = m_max_size.width;
+                minMaxInfo->ptMaxTrackSize.x = m_max_size.width * m_dpi_ratio;
             if (m_max_size.height != SM_CYMAXTRACK)
-                minMaxInfo->ptMaxTrackSize.y = m_max_size.height;
+                minMaxInfo->ptMaxTrackSize.y = m_max_size.height * m_dpi_ratio;
         } else {
             minMaxInfo->ptMinTrackSize.x = m_size.width;
             minMaxInfo->ptMinTrackSize.y = m_size.height;
