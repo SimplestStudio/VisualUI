@@ -19,7 +19,8 @@ UIButton::UIButton(UIWidget *parent, const tstring &text) :
     UIAbstractButton(parent, text),
     UIconHandler(this),
     m_stockIcon(StockIcon::None),
-    m_maxRotationAngle(90.0)
+    m_maxRotationAngle(90.0),
+    m_handCursorOnHover(false)
 #ifdef _WIN32
     , supportSnapLayouts(false),
     snapLayoutAllowed(false),
@@ -63,10 +64,24 @@ void UIButton::enableAnimationOnHover(int duration, double maxAngle)
     ra->setDuration(duration);
 }
 
+void UIButton::setHandCursorOnHover(bool enabled)
+{
+    m_handCursorOnHover = enabled;
+}
+
 #ifdef _WIN32
 bool UIButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 {
     switch (msg) {
+    case WM_SETCURSOR: {
+        if (m_handCursorOnHover && !m_disabled && LOWORD(lParam) == HTCLIENT) {
+            SetCursor(LoadCursor(nullptr, IDC_HAND));
+            *result = TRUE;
+            return true;
+        }
+        break;
+    }
+
     case WM_NCHITTEST: {
         if (supportSnapLayouts && snapLayoutAllowed) {
             if (!snapLayoutTimerIsSet) {
@@ -127,6 +142,15 @@ bool UIButton::event(uint ev_type, void *param)
     switch (ev_type) {
     case GDK_ENTER_NOTIFY: {
         animateIconTo(m_maxRotationAngle);
+        if (m_handCursorOnHover && !m_disabled) {
+            GdkDisplay *display = gtk_widget_get_display(m_hWindow);
+            GdkCursor *cursor = gdk_cursor_new_from_name(display, "pointer");
+            GdkWindow *gdk_wnd = gtk_widget_get_window(m_hWindow);
+            if (gdk_wnd && cursor) {
+                gdk_window_set_cursor(gdk_wnd, cursor);
+                g_object_unref(cursor);
+            }
+        }
         break;
     }
 

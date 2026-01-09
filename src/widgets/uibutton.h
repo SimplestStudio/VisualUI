@@ -22,6 +22,7 @@ public:
     void setSupportSnapLayouts();
     void setStockIcon(StockIcon stockIcon);
     void enableAnimationOnHover(int duration = 200, double maxAngle = 90.0);
+    void setHandCursorOnHover(bool enabled = true);
     void setChecked(bool checked) = delete;
     bool isChecked() noexcept = delete;
 
@@ -40,6 +41,7 @@ private:
 
     int  m_stockIcon;
     double m_maxRotationAngle;
+    bool m_handCursorOnHover;
 #ifdef _WIN32
     bool supportSnapLayouts,
          snapLayoutAllowed;
