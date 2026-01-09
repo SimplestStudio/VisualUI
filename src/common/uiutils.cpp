@@ -317,6 +317,19 @@ std::wstring UIUnicode::utf8ToWStr(const std::string &str)
     }
     return {};
 }
+
+std::string UIUnicode::wstrToUtf8(const std::wstring &str)
+{
+    if (!str.empty()) {
+        int size = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), (int)str.length(), nullptr, 0, nullptr, nullptr);
+        if (size > 0) {
+            std::string result(size, '\0');
+            WideCharToMultiByte(CP_UTF8, 0, str.c_str(), (int)str.length(), &result[0], size, nullptr, nullptr);
+            return result;
+        }
+    }
+    return {};
+}
 #endif
 
 size_t UIUnicode::charLenAt(const tstring &str, size_t pos) noexcept

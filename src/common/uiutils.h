@@ -65,6 +65,7 @@ namespace UIUnicode
 {
 #ifdef _WIN32
 DECL_VISUALUI std::wstring utf8ToWStr(const std::string &str);
+DECL_VISUALUI std::string wstrToUtf8(const std::wstring &str);
 #endif
 // NOTE:
 //  On Windows: 'pos' is an index in wchar_t units (UTF-16 code units).
