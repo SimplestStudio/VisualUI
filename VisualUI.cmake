@@ -16,6 +16,7 @@ set(VISUALUI_HEADERS
     ${UICLASSES}/common/uiplatformtypes.h
     ${UICLASSES}/common/uiutils.h
     ${UICLASSES}/common/uicommon.h
+    ${UICLASSES}/common/uifilesystem.h
     ${UICLASSES}/graphics/uimetrics.h
     ${UICLASSES}/graphics/uipalette.h
     ${UICLASSES}/graphics/uidrawningengine.h
@@ -72,6 +73,7 @@ set(VISUALUI_HEADERS
 set(VISUALUI_SOURCES
     ${UICLASSES}/common/uiutils.cpp
     ${UICLASSES}/common/uicommon.cpp
+    ${UICLASSES}/common/uifilesystem.cpp
     ${UICLASSES}/graphics/uimetrics.cpp
     ${UICLASSES}/graphics/uipalette.cpp
     ${UICLASSES}/graphics/uidrawningengine.cpp
