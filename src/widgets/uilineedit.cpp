@@ -127,14 +127,16 @@ void UILineEdit::calculateCaretPositions()
     if (algn & Metrics::AlignVBottom)
         y += m_viewportRc.height - height;
 
-    m_caretPositions.push_back({x, y});
+    // First position at start
+    PangoRectangle strong_pos;
+    pango_layout_get_cursor_pos(lut, 0, &strong_pos, NULL);
+    m_caretPositions.push_back({x + strong_pos.x / PANGO_SCALE, y + strong_pos.y / PANGO_SCALE});
 
     size_t bytePos = 0;
     while (bytePos < textToShow.length()) {
-        PangoRectangle rect;
-        pango_layout_index_to_pos(lut, bytePos, &rect);
-        m_caretPositions.push_back({x + (rect.x + rect.width) / PANGO_SCALE, y + rect.y / PANGO_SCALE});
         bytePos = charNextPos(textToShow, bytePos);
+        pango_layout_get_cursor_pos(lut, bytePos, &strong_pos, NULL);
+        m_caretPositions.push_back({x + strong_pos.x / PANGO_SCALE, y + strong_pos.y / PANGO_SCALE});
     }
 
     g_object_unref(lut);

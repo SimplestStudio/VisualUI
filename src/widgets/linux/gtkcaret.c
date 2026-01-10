@@ -113,6 +113,8 @@ void gtk_caret_set_position(GtkCaret *caret, gint x, gint y)
 {
     if (caret->parent_wgt) {
         gtk_layout_move(GTK_LAYOUT(caret->parent_wgt), GTK_WIDGET(caret), x, y);
+        // Need queue_resize on both parent and toplevel to apply new position
+        gtk_widget_queue_resize(caret->parent_wgt);
         GtkWidget *toplevel = gtk_widget_get_toplevel(caret->parent_wgt);
         if (toplevel)
             gtk_widget_queue_resize(toplevel); // gtk_widget_queue_allocate(toplevel);
