@@ -97,7 +97,7 @@ void UIAbstractButton::adjustSizeBasedOnContent()
     fm.textSize(m_text, width, height);
     width /= m_dpi_ratio;
     height /= m_dpi_ratio;
-    int w = width + 2 * mtr->value(Metrics::IconWidth) + mtr->value(Metrics::TextMarginLeft) + mtr->value(Metrics::TextMarginRight);
+    int w = width + mtr->value(Metrics::IconWidth) + mtr->value(Metrics::TextMarginLeft) + mtr->value(Metrics::TextMarginRight);
 #ifdef _WIN32
     int h = max(height + mtr->value(Metrics::TextMarginTop) + mtr->value(Metrics::TextMarginBottom), mtr->value(Metrics::IconHeight));
 #else
