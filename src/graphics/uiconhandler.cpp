@@ -3,6 +3,7 @@
 #include "uiwidget.h"
 #include "uiscalaranimation.h"
 #ifdef _WIN32
+# include "uiapplication.h"
 # include "uiutils.h"
 #else
 # include <librsvg-2.0/librsvg/rsvg.h>
@@ -84,7 +85,7 @@ void UIconHandler::setIcon(int id, int w, int h)
     }
     m_owner->metrics()->setMetrics(Metrics::IconWidth, w);
     m_owner->metrics()->setMetrics(Metrics::IconHeight, h);
-    HMODULE hInst = GetModuleHandle(NULL);
+    HMODULE hInst = UIApplication::instance()->moduleHandle();
     m_hIcon = (HICON)LoadImage(hInst, MAKEINTRESOURCE(id), IMAGE_ICON, w, h, LR_COPYFROMRESOURCE | LR_DEFAULTCOLOR | LR_SHARED);
     m_owner->update();
 }

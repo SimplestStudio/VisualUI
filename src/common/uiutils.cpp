@@ -3,6 +3,7 @@
 # include <string>
 # include <sddl.h>
 # include <intrin.h>
+# include "uiapplication.h"
 # define BIT123_LAYOUTRTL 0x08000000
 # ifndef LOCALE_IREADINGLAYOUT
 #  define LOCALE_IREADINGLAYOUT 0x70
@@ -28,7 +29,7 @@
 #ifdef _WIN32
 static IStream* LoadResourceToStream(int id, LPCWSTR type) {
     IStream *pStream = nullptr;
-    HMODULE hInst = GetModuleHandle(NULL);
+    HMODULE hInst = UIApplication::instance()->moduleHandle();
     if (HRSRC hRes = FindResource(hInst, MAKEINTRESOURCE(id), type)) {
         if (HGLOBAL hResData = LoadResource(hInst, hRes)) {
             if (LPVOID pData = LockResource(hResData)) {

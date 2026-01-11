@@ -3,6 +3,13 @@
 #include "uistyle.h"
 #ifdef _WIN32
 # include <gdiplus.h>
+
+static HMODULE getCurrentModule()
+{
+    HMODULE hModule = NULL;
+    GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)getCurrentModule, &hModule);
+    return hModule;
+}
 #else
 # include "uiutils.h"
 
@@ -261,7 +268,7 @@ UIApplication::UIApplication(int argc, char *argv[]) :
 #ifdef _WIN32
     d_ptr->hInstance = hInstance;
     if (!d_ptr->hInstance)
-        d_ptr->hInstance = GetModuleHandle(NULL);
+        d_ptr->hInstance = getCurrentModule();
 #else
     gtk_init(&argc, &argv);
 #endif

@@ -3,6 +3,7 @@
 #include "uiutils.h"
 #include "uimetrics.h"
 #ifdef _WIN32
+# include "uiapplication.h"
 # include "uithread.h"
 # include "uipalette.h"
 # include <windowsx.h>
@@ -542,7 +543,7 @@ void UIWindow::showMaximized()
 #ifdef _WIN32
 void UIWindow::setIcon(int id)
 {
-    HMODULE hInstance = GetModuleHandle(NULL);
+    HMODULE hInstance = UIApplication::instance()->moduleHandle();
     HICON hIcon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(id), IMAGE_ICON, 96, 96, LR_DEFAULTCOLOR | LR_SHARED);
     SendMessage(m_hWindow, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
     SendMessage(m_hWindow, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
