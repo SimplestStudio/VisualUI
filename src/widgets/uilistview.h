@@ -24,6 +24,7 @@ public:
     int rowBaseHeight() const noexcept;
     ScrollMode scrollMode() const noexcept;
     int count() const noexcept;
+    bool containsItem(const tstring &text) const;
 
     /* Signals */
     Signal<int> indexChangedSignal;

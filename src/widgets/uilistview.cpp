@@ -180,6 +180,16 @@ int UIListView::count() const noexcept
     return m_itemCount;
 }
 
+bool UIListView::containsItem(const tstring &text) const
+{
+    for (const auto &item : m_items) {
+        if (item.text == text) {
+            return true;
+        }
+    }
+    return false;
+}
+
 #ifdef _WIN32
 bool UIListView::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 {
