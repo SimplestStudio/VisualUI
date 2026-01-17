@@ -4,7 +4,7 @@
 #include "uiabstractscrollarea.h"
 #include <vector>
 
-class UIToolButton;
+class UIAbstractButton;
 class DECL_VISUALUI UIListView : public UIAbstractScrollArea
 {
 public:
@@ -19,6 +19,7 @@ public:
     void setCurrentIndex(int index);
     void setRowBaseHeight(int height) noexcept;
     void setScrollMode(ScrollMode mode) noexcept;
+    void setActivateOnMouseUp(bool enable) noexcept;
     uintptr_t itemData(int index) const;
     int currentIndex() const noexcept;
     int rowBaseHeight() const noexcept;
@@ -40,7 +41,7 @@ protected:
 private:
     void createVisibleWidgets();
     void updateVisibleItems();
-    void updateItemWidget(UIToolButton* button, int dataIndex);
+    void updateItemWidget(UIAbstractButton* button, int dataIndex);
     int getFirstVisibleIndex() noexcept;
     int getLastVisibleIndex() noexcept;
     
@@ -49,13 +50,14 @@ private:
         uintptr_t data;
     };
 
-    std::vector<UIToolButton*> m_visibleWidgets;
+    std::vector<UIAbstractButton*> m_visibleWidgets;
     std::vector<Item> m_items;
     int m_firstVisibleIndex;
     int m_lastVisibleIndex;
     int m_rowBaseHeight;
     int m_currentIndex;
     int m_itemCount;
+    bool m_activateOnMouseUp;
     ScrollMode m_scrollMode;
 };
 

@@ -1,4 +1,5 @@
 #include "uilistview.h"
+#include "uibutton.h"
 #include "uitoolbutton.h"
 #include "uiscrollbar.h"
 #include <algorithm>
@@ -10,6 +11,7 @@ UIListView::UIListView(UIWidget *parent) :
     m_rowBaseHeight(32),
     m_currentIndex(-1),
     m_itemCount(0),
+    m_activateOnMouseUp(false),
     m_scrollMode(ScrollPerItem)
 {
     UIWidget *content = new UIWidget(this);
@@ -85,7 +87,7 @@ void UIListView::removeItem(int index)
 
 void UIListView::clearList()
 {
-    for (UIToolButton* widget : m_visibleWidgets) {
+    for (UIAbstractButton* widget : m_visibleWidgets) {
         delete widget;
     }
     m_visibleWidgets.clear();
@@ -152,6 +154,11 @@ void UIListView::setScrollMode(ScrollMode mode) noexcept
         setWheelScrollStep(m_rowBaseHeight);
     }
     updateVisibleItems();
+}
+
+void UIListView::setActivateOnMouseUp(bool enable) noexcept
+{
+    m_activateOnMouseUp = enable;
 }
 
 uintptr_t UIListView::itemData(int index) const
@@ -277,7 +284,12 @@ void UIListView::createVisibleWidgets()
     
     while ((int)m_visibleWidgets.size() < maxVisibleCount) {
         int widgetIndex = (int)m_visibleWidgets.size();
-        UIToolButton *btn = new UIToolButton(view, _T(""));
+        UIAbstractButton *btn = nullptr;
+        if (m_activateOnMouseUp) {
+            btn = new UIButton(view, _T(""));
+        } else {
+            btn = new UIToolButton(view, _T(""));
+        };
 #ifdef _WIN32
         btn->enableClipSiblings();
 #endif
@@ -323,7 +335,7 @@ void UIListView::createVisibleWidgets()
     int visibleCount = m_lastVisibleIndex - m_firstVisibleIndex + 1;
     
     for (int i = 0; i < (int)m_visibleWidgets.size(); ++i) {
-        UIToolButton *widget = m_visibleWidgets[i];
+        UIAbstractButton *widget = m_visibleWidgets[i];
         
         if (i < visibleCount) {
             int dataIndex = m_firstVisibleIndex + i;
@@ -365,7 +377,7 @@ void UIListView::updateVisibleItems()
     createVisibleWidgets();
 }
 
-void UIListView::updateItemWidget(UIToolButton* button, int dataIndex)
+void UIListView::updateItemWidget(UIAbstractButton* button, int dataIndex)
 {
     if (dataIndex >= 0 && dataIndex < (int)m_items.size()) {
         button->setText(m_items[dataIndex].text);
