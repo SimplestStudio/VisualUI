@@ -162,6 +162,7 @@ UIDrawingEngine::UIDrawingEngine(bool rtl) :
     m_bmp(nullptr),
     m_graphics(nullptr),
     m_origMatrix(nullptr),
+    m_savedState(0),
     m_root_is_layered(false)
 #else
   , m_rc(nullptr),
@@ -1334,10 +1335,12 @@ void UIDrawingEngine::LayeredChildBegin(UIDrawningSurface *ds, HWND hwnd, RECT *
     m_tmp_dpi = m_dpi;
     m_tmp_hwnd = m_hwnd;
     m_tmp_hdc = m_hdc;
+    m_savedState = 0;
 
+    HWND rootHwnd = GetAncestor(hwnd, GA_ROOT);
     POINT pt = {0,0};
     ClientToScreen(hwnd, &pt);
-    if (HWND rootHwnd = GetAncestor(hwnd, GA_ROOT)) {
+    if (rootHwnd) {
         ScreenToClient(rootHwnd, &pt);
         if (m_rtl) {
             RECT rootRc;
@@ -1345,7 +1348,29 @@ void UIDrawingEngine::LayeredChildBegin(UIDrawningSurface *ds, HWND hwnd, RECT *
             pt.x = rootRc.right - pt.x - (rc->right - rc->left);
         }
     }
-    OffsetRect(rc, pt.x, pt.y);
+    OffsetRect(rc, pt.x, pt.y);    
+
+    if (HWND parentHwnd = GetParent(hwnd)) {
+        if (parentHwnd != rootHwnd) {
+            RECT parentClientRc;
+            GetClientRect(parentHwnd, &parentClientRc);
+            POINT parentPt = {0, 0};
+            ClientToScreen(parentHwnd, &parentPt);
+            if (rootHwnd) {
+                ScreenToClient(rootHwnd, &parentPt);
+                if (m_rtl) {
+                    RECT rootRc;
+                    GetClientRect(rootHwnd, &rootRc);
+                    parentPt.x = rootRc.right - parentPt.x - (parentClientRc.right - parentClientRc.left);
+                }
+            }
+            Gdiplus::Rect clipRect(parentPt.x, parentPt.y,
+                                   parentClientRc.right - parentClientRc.left,
+                                   parentClientRc.bottom - parentClientRc.top);
+            m_savedState = m_graphics->Save();
+            m_graphics->SetClip(clipRect);
+        }
+    }
 
     m_ds = ds;
     m_rc = rc;
@@ -1396,6 +1421,9 @@ void UIDrawingEngine::LayeredEnd() noexcept
 
 void UIDrawingEngine::LayeredChildEnd() noexcept
 {
+    if (m_savedState != 0)
+        m_graphics->Restore(m_savedState);
+
     ReleaseDC(m_hwnd, m_hdc);
     m_hdc = m_tmp_hdc;
     m_hwnd = m_tmp_hwnd;

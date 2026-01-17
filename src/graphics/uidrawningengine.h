@@ -79,6 +79,7 @@ private:
     Gdiplus::Bitmap   *m_bmp;
     Gdiplus::Graphics *m_graphics;
     Gdiplus::Matrix   *m_origMatrix;
+    Gdiplus::GraphicsState m_savedState;
     bool m_root_is_layered;
 #else
     cairo_t *m_cr;
