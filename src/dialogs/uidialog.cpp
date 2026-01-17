@@ -12,7 +12,7 @@ UIDialog::UIDialog(UIWidget *parent, const Rect &rc) :
 #ifdef __linux
     gtk_window_set_type_hint(GTK_WINDOW(m_hWindow), GDK_WINDOW_TYPE_HINT_DIALOG);
     gtk_window_set_title(GTK_WINDOW(m_hWindow), "");
-    gtk_window_set_resizable(GTK_WINDOW(m_hWindow), FALSE);
+    // gtk_window_set_resizable(GTK_WINDOW(m_hWindow), FALSE);
 
     GdkPixbuf *empty_icon = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 1, 1);
     gdk_pixbuf_fill(empty_icon, 0x00000000);
