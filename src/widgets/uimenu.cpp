@@ -37,7 +37,7 @@ UIMenu::~UIMenu()
 UIButton* UIMenu::addSection(const tstring &text, const UIPixmap &pixmap)
 {
     UIButton *btn = new UIButton(this, text);
-    btn->setFont({DEFAULT_FONT_NAME, 8.5});
+    // btn->setFont({DEFAULT_FONT_NAME, 8.5});
     btn->setObjectGroupId(_T("MenuButton"));
     btn->metrics()->setMetrics(Metrics::IconAlignment, Metrics::AlignHLeft | Metrics::AlignVCenter);
     btn->metrics()->setMetrics(Metrics::IconMarginLeft, 6);
