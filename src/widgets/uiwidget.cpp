@@ -99,6 +99,7 @@ UIWidget::~UIWidget()
         delete m_geometry_animation; m_geometry_animation = nullptr;
     }
     UIApplication::instance()->style()->unregisterWidget(this);
+    UIApplication::instance()->unregisterWidget(this, objectType());
     m_is_class_destroyed = true;
     if (m_layout) {
         if (!UIMemory::isOnStack(m_layout))

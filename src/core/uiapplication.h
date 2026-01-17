@@ -4,6 +4,7 @@
 #include "uidefines.h"
 #include "uiobject.h"
 #include "uicommon.h"
+#include <vector>
 #ifdef _WIN32
 # include <Windows.h>
 #else
@@ -43,6 +44,9 @@ public:
     LayoutDirection layoutDirection() const noexcept;
     UIStyle* style() noexcept;
 
+    std::vector<UIWidget*> windows() const;
+    UIWidget* activeWindow() const noexcept;
+
     int exec();
     void exit(int);
 
@@ -51,6 +55,7 @@ private:
     UIApplication();
 
     void registerWidget(UIWidget*, ObjectType, const Rect &rc);
+    void unregisterWidget(UIWidget*, ObjectType);
 
     static UIApplication *inst;
     class UIApplicationPrivate;

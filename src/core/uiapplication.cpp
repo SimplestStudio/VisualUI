@@ -1,6 +1,7 @@
 #include "uiapplication.h"
 #include "uiwidget.h"
 #include "uistyle.h"
+#include <algorithm>
 #ifdef _WIN32
 # include <gdiplus.h>
 
@@ -29,6 +30,7 @@ public:
 
     FontInfo fontInfo;
     UIStyle  *style;
+    std::vector<UIWidget*> windows;
 #ifdef _WIN32
     ULONG_PTR gdi_token;
     HINSTANCE hInstance;
@@ -323,6 +325,28 @@ UIStyle* UIApplication::style() noexcept
     return d_ptr->style;
 }
 
+std::vector<UIWidget*> UIApplication::windows() const
+{
+    return d_ptr->windows;
+}
+
+UIWidget* UIApplication::activeWindow() const noexcept
+{
+#ifdef _WIN32
+    HWND hActiveWnd = GetForegroundWindow();
+    for (UIWidget *wgt : d_ptr->windows) {
+        if (wgt->platformWindow() == hActiveWnd)
+            return wgt;
+    }
+#else
+    for (UIWidget *wgt : d_ptr->windows) {
+        if (gtk_window_is_active(GTK_WINDOW(wgt->platformWindow())))
+            return wgt;
+    }
+#endif
+    return nullptr;
+}
+
 UIApplication::~UIApplication()
 {
     delete d_ptr, d_ptr = nullptr;
@@ -459,4 +483,16 @@ void UIApplication::registerWidget(UIWidget *wgt, ObjectType objType, const Rect
     // if (d_ptr->layoutDirection == LayoutDirection::RightToLeft)
     //     gtk_widget_set_direction(gtkWgt, GTK_TEXT_DIR_RTL);
 #endif
+
+    if (objType == ObjectType::WindowType)
+        d_ptr->windows.push_back(wgt);
+}
+
+void UIApplication::unregisterWidget(UIWidget *wgt, ObjectType objType)
+{
+    if (objType == ObjectType::WindowType) {
+        auto it = std::find(d_ptr->windows.begin(), d_ptr->windows.end(), wgt);
+        if (it != d_ptr->windows.end())
+            d_ptr->windows.erase(it);
+    }
 }
