@@ -70,7 +70,7 @@ UIPopupMessage::UIPopupMessage(UIWidget *parent, const Rect &rc) :
 
     m_buttonsLayout = new UIBoxLayout(UIBoxLayout::Horizontal, UIBoxLayout::AlignHCenter | UIBoxLayout::AlignVCenter);
     m_buttonsLayout->setContentMargins(20, 0, 20, 0);
-    m_buttonsLayout->setSpacing(0);
+    m_buttonsLayout->setSpacing(8);
     buttonsWidget->setLayout(m_buttonsLayout);
 }
 
@@ -86,7 +86,7 @@ void UIPopupMessage::setCaptionText(const tstring &text)
 
 void UIPopupMessage::setDescriptionText(const tstring &text)
 {
-    m_labelDescription->setText(text);
+    m_labelDescription->setText(text, true);
 }
 
 void UIPopupMessage::addButton(const tstring &text, ButtonRole role)
