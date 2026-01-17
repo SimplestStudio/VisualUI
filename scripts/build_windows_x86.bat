@@ -4,8 +4,11 @@ setlocal
 cd /d "%~dp0.."
 
 for %%c in (Debug Release) do (
-    echo Configuring %%c...
-    cmake -S . -B "lib/build/%%c"
+    echo Removing old build directory for %%c...
+    rd /s /q "lib\build\%%c" 2>nul
+
+    echo Configuring %%c for x86...
+    cmake -S . -B "lib/build/%%c" -G "Visual Studio 16 2019" -A Win32
     if errorlevel 1 exit /b 1
 
     echo Building %%c...
