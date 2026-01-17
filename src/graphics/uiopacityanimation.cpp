@@ -2,7 +2,7 @@
 #include "uiwidget.h"
 #include "uitimer.h"
 
-#define OPACITY_TIMER_STEP     16
+#define OPACITY_TIMER_STEP     12
 #define OPACITY_ANIMATION_STEP 25
 
 class UIOpacityAnimationPrivate
