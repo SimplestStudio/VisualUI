@@ -316,9 +316,9 @@ UIWindow::UIWindow(UIWidget *parent, const Rect &rc, BYTE windowFlags) :
     int x = rc.x;
     UINT flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
     if (m_borderless && ver >= WinVer::Win10) {
-        Margins fr;
-        GetFrameBounds(m_hWindow, fr);
-        x += fr.left;
+        // Margins fr;
+        // GetFrameBounds(m_hWindow, fr);
+        // x += fr.left;
         flags &= ~SWP_NOMOVE;
     }
     SetWindowPos(m_hWindow, NULL, x, rc.y, 0, 0, flags);
@@ -374,21 +374,21 @@ UIWindow::~UIWindow()
 #ifdef _WIN32
 void UIWindow::setGeometry(int x, int y, int w, int h)
 {
-    if (m_borderless && ver >= WinVer::Win10) {
-        Margins fr;
-        GetFrameBounds(m_hWindow, fr);
-        x += fr.left;
-    }
+    // if (m_borderless && ver >= WinVer::Win10) {
+    //     Margins fr;
+    //     GetFrameBounds(m_hWindow, fr);
+    //     x += fr.left;
+    // }
     UIAbstractWindow::setGeometry(x, y, w, h);
 }
 
 void UIWindow::move(int x, int y)
 {
-    if (m_borderless && ver >= WinVer::Win10) {
-        Margins fr;
-        GetFrameBounds(m_hWindow, fr);
-        x += fr.left;
-    }
+    // if (m_borderless && ver >= WinVer::Win10) {
+    //     Margins fr;
+    //     GetFrameBounds(m_hWindow, fr);
+    //     x += fr.left;
+    // }
     UIAbstractWindow::move(x, y);
 }
 #else
