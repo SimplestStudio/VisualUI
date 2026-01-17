@@ -81,6 +81,13 @@ bool UIAbstractPopup::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *res
         break;
     }
 
+    case WM_MOUSEACTIVATE: {
+        // Return MA_NOACTIVATE to prevent activation on click
+        // but still receive the mouse message (WM_LBUTTONDOWN)
+        *result = MA_NOACTIVATE;
+        return true;
+    }
+
     case WM_SIZE: {
         UIAbstractWindow::event(msg, wParam, lParam, result);
         paintLayered();
