@@ -10,6 +10,8 @@
 # include <fcntl.h>
 # include <fts.h>
 # include <dirent.h>
+# include <string.h>
+# include <bsd/string.h>
 # define tchar char
 # define tstrcpy strcpy
 #endif
