@@ -18,6 +18,7 @@ public:
     uintptr_t itemData(int index);
     int currentIndex() const noexcept;
     int count() const noexcept;
+    bool containsItem(const tstring &text) const;
 
     /* Signals */
     Signal<int> indexChangedSignal;

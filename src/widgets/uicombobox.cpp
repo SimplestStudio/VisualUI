@@ -180,3 +180,13 @@ int UIComboBox::count() const noexcept
 {
     return m_items.size();
 }
+
+bool UIComboBox::containsItem(const tstring &text) const
+{
+    for (const auto &item : m_items) {
+        if (item.text == text) {
+            return true;
+        }
+    }
+    return false;
+}
