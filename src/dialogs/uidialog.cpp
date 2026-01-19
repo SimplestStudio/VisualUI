@@ -132,7 +132,11 @@ bool UIDialog::event(uint ev_type, void *param)
     }
 
     case GDK_HOOKED_MAP_AFTER:
-        gtk_widget_queue_resize(m_hWindow); // gtk_widget_queue_allocate(m_hWindow);
+#if GTK_CHECK_VERSION(3, 20, 0)
+        gtk_widget_queue_allocate(m_hWindow);
+#else
+        gtk_widget_queue_resize(m_hWindow);
+#endif
     case GDK_HOOKED_SIZE_ALLOC: {
         int w = 0, h = 0;
         gtk_window_get_size(GTK_WINDOW(m_hWindow), &w, &h);

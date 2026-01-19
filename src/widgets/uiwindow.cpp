@@ -220,7 +220,11 @@ static bool isThemeActive()
 static gboolean onUpdateGeometry(gpointer data)
 {
     GtkWidget *wgt = (GtkWidget*)data;
-    gtk_widget_queue_resize(wgt); // gtk_widget_queue_allocate(wgt);
+#if GTK_CHECK_VERSION(3, 20, 0)
+    gtk_widget_queue_allocate(wgt);
+#else
+    gtk_widget_queue_resize(wgt);
+#endif
     return G_SOURCE_REMOVE;
 }
 #endif
@@ -493,7 +497,11 @@ void UIWindow::setContentsMargins(int left, int top, int right, int bottom)
     if (IsWindowVisible(m_hWindow))
         SetWindowPos(m_hWindow, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 #else
-    gtk_widget_queue_resize(m_hWindow); // gtk_widget_queue_allocate(m_hWindow);
+# if GTK_CHECK_VERSION(3, 20, 0)
+    gtk_widget_queue_allocate(m_hWindow);
+# else
+    gtk_widget_queue_resize(m_hWindow);
+# endif
 #endif
 }
 
@@ -891,7 +899,11 @@ bool UIWindow::event(uint ev_type, void *param)
     }
 
     case GDK_HOOKED_MAP_AFTER: {
-        gtk_widget_queue_resize(m_hWindow); // gtk_widget_queue_allocate(m_hWindow);
+#if GTK_CHECK_VERSION(3, 20, 0)
+        gtk_widget_queue_allocate(m_hWindow);
+#else
+        gtk_widget_queue_resize(m_hWindow);
+#endif
         return false;
     }
 

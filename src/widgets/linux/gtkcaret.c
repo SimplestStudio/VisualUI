@@ -114,10 +114,18 @@ void gtk_caret_set_position(GtkCaret *caret, gint x, gint y)
     if (caret->parent_wgt) {
         gtk_layout_move(GTK_LAYOUT(caret->parent_wgt), GTK_WIDGET(caret), x, y);
         // Need queue_resize on both parent and toplevel to apply new position
+#if GTK_CHECK_VERSION(3, 20, 0)
+        gtk_widget_queue_allocate(caret->parent_wgt);
+#else
         gtk_widget_queue_resize(caret->parent_wgt);
+#endif
         GtkWidget *toplevel = gtk_widget_get_toplevel(caret->parent_wgt);
         if (toplevel)
-            gtk_widget_queue_resize(toplevel); // gtk_widget_queue_allocate(toplevel);
+#if GTK_CHECK_VERSION(3, 20, 0)
+            gtk_widget_queue_allocate(toplevel);
+#else
+            gtk_widget_queue_resize(toplevel);
+#endif
     }
 }
 
@@ -127,7 +135,11 @@ void gtk_caret_show(GtkCaret *caret)
     if (caret->parent_wgt) {
         GtkWidget *toplevel = gtk_widget_get_toplevel(caret->parent_wgt);
         if (toplevel)
-            gtk_widget_queue_resize(toplevel); // gtk_widget_queue_allocate(toplevel);
+#if GTK_CHECK_VERSION(3, 20, 0)
+            gtk_widget_queue_allocate(toplevel);
+#else
+            gtk_widget_queue_resize(toplevel);
+#endif
     }
 }
 

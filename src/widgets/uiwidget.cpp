@@ -275,7 +275,11 @@ void UIWidget::updateGeometry()
 #else
     GtkWidget *toplevel = gtk_widget_get_toplevel(m_hWindow);
     if (toplevel)
+# if GTK_CHECK_VERSION(3, 20, 0)
+        gtk_widget_queue_allocate(toplevel);
+# else
         gtk_widget_queue_resize(toplevel);
+# endif
 #endif
 }
 
