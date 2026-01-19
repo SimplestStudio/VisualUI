@@ -43,12 +43,17 @@ namespace UIMemory
     bool isOnStack(void *addr);
 };
 
+struct _GtkWindow;
 namespace UIScreen
 {
 #ifdef _WIN32
     DECL_VISUALUI double dpiAtPoint(const POINT &pt);
     DECL_VISUALUI double dpiAtRect(const RECT &rc);
+    DECL_VISUALUI RECT workAreaAtPoint(const POINT &pt);
+    DECL_VISUALUI RECT workAreaFromWindow(HWND hwnd);
 #else
+    DECL_VISUALUI GdkRectangle workAreaAtPoint(const GdkPoint &pt);
+    DECL_VISUALUI GdkRectangle workAreaFromWindow(_GtkWindow *window);
 #endif
 };
 

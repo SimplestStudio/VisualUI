@@ -21,6 +21,7 @@
 # include <stdio.h>
 # include <stdint.h>
 # include <cstring>
+# include <gtk/gtk.h>
 # include <gdk/gdk.h>
 # include <pango/pango.h>
 #endif
@@ -278,6 +279,32 @@ double UIScreen::dpiAtRect(const RECT &rc)
     return hMon ? ScreenDpiFromMonitor(hMon) : 1.0;
 }
 
+RECT UIScreen::workAreaAtPoint(const POINT &pt)
+{
+    RECT workArea = {0, 0, 0, 0};
+    if (HMONITOR hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST)) {
+        MONITORINFO monInfo;
+        monInfo.cbSize = sizeof(MONITORINFO);
+        if (GetMonitorInfo(hMon, &monInfo)) {
+            workArea = monInfo.rcWork;
+        }
+    }
+    return workArea;
+}
+
+RECT UIScreen::workAreaFromWindow(HWND hwnd)
+{
+    RECT workArea = {0, 0, 0, 0};
+    if (HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)) {
+        MONITORINFO monInfo;
+        monInfo.cbSize = sizeof(MONITORINFO);
+        if (GetMonitorInfo(hMon, &monInfo)) {
+            workArea = monInfo.rcWork;
+        }
+    }
+    return workArea;
+}
+
 bool UILocalization::isRtlLanguage(unsigned long lcid)
 {
     if (UIUtils::winVersion() >= UIUtils::WinVer::Win7) {
@@ -292,6 +319,51 @@ bool UILocalization::isRtlLanguage(unsigned long lcid)
     return false;
 }
 #else
+GdkRectangle UIScreen::workAreaAtPoint(const GdkPoint &pt)
+{
+    GdkRectangle workArea = {0, 0, 0, 0};
+#if GTK_CHECK_VERSION(3, 22, 0)
+    GdkDisplay *display = gdk_display_get_default();
+    if (GdkMonitor *monitor = gdk_display_get_monitor_at_point(display, pt.x, pt.y)) {
+        gdk_monitor_get_workarea(monitor, &workArea);
+    }
+#else
+    GdkScreen *screen = gdk_screen_get_default();
+    if (screen) {
+        gint monitor_num = gdk_screen_get_monitor_at_point(screen, pt.x, pt.y);
+        gdk_screen_get_monitor_workarea(screen, monitor_num, &workArea);
+    }
+#endif
+    return workArea;
+}
+
+GdkRectangle UIScreen::workAreaFromWindow(_GtkWindow *window)
+{
+    GdkRectangle workArea = {0, 0, 0, 0};
+#if GTK_CHECK_VERSION(3, 22, 0)
+    GdkDisplay *display = gtk_widget_get_display(GTK_WIDGET(window));
+    GdkWindow *gdk_window = gtk_widget_get_window(GTK_WIDGET(window));
+    if (gdk_window) {
+        GdkMonitor *monitor = gdk_display_get_monitor_at_window(display, gdk_window);
+        if (monitor) {
+            gdk_monitor_get_workarea(monitor, &workArea);
+        }
+    }
+#else
+    GdkScreen *screen = gtk_window_get_screen(window);
+    if (!screen) return workArea;
+
+    gint x, y, width, height;
+    gtk_window_get_position(window, &x, &y);
+    gtk_window_get_size(window, &width, &height);
+    gint center_x = x + width / 2;
+    gint center_y = y + height / 2;
+    gint monitor_num = gdk_screen_get_monitor_at_point(screen, center_x, center_y);
+    gdk_screen_get_monitor_workarea(screen, monitor_num, &workArea);
+#endif
+    return workArea;
+}
+
 bool UILocalization::isRtlLanguage(const char *locale)
 {
     PangoLanguage *lang = pango_language_from_string(locale);
