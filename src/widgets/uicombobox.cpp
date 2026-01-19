@@ -3,6 +3,7 @@
 #include "uimenu.h"
 #include "uimetrics.h"
 #include "uiscalaranimation.h"
+#include "uiutils.h"
 #ifdef _WIN32
 # include <windowsx.h>
 #else
@@ -96,7 +97,20 @@ void UIComboBox::onClick()
     Point pt = mapToGlobal(Point(0, 0));
     Size sz = size();
     int height = calculateMenuHeight();
-    m_menu = new UIMenu(topLevelWidget(), Rect(pt.x, pt.y + sz.height + 6 * m_dpi_ratio, sz.width, height));
+    int menuY = pt.y + sz.height + 6 * m_dpi_ratio;
+
+#ifdef _WIN32
+    RECT workArea = UIScreen::workAreaFromWindow((HWND)topLevelWidget()->platformWindow());
+    int screenBottom = workArea.bottom;
+#else
+    GdkRectangle workArea = UIScreen::workAreaAtPoint({pt.x, pt.y});
+    int screenBottom = workArea.y + workArea.height;
+#endif
+    if (screenBottom > 0 && menuY + height > screenBottom) {
+        menuY = pt.y - height - 6 * m_dpi_ratio;
+    }
+
+    m_menu = new UIMenu(topLevelWidget(), Rect(pt.x, menuY, sz.width, height));
     m_menu->setObjectGroupId(_T("ToolTip"));
     m_menu->aboutToDestroySignal.connect([this]() {
         m_menu = nullptr;
