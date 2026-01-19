@@ -136,6 +136,15 @@ bool UIAbstractButton::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *re
         break;
     }
 
+    case WM_KEYDOWN: {
+        if (!m_disabled) {
+            HWND parentHwnd = GetParent(m_hWindow);
+            if (parentHwnd)
+                SendMessageW(parentHwnd, WM_CHILD_KEYDOWN_THROUGH_NOTIFY, wParam, lParam);
+        }
+        break;
+    }
+
     case WM_MOUSEENTER: {
         if (!m_disabled) {
             if (!m_selected) {
