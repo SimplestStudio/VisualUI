@@ -15,6 +15,7 @@ public:
     void clearItems();
     void setCurrentIndex(int index, bool emitSignal = false) noexcept;
     void setItemHeight(int height) noexcept;
+    void setMaxVisibleItems(int maxItems) noexcept;
     uintptr_t itemData(int index);
     int currentIndex() const noexcept;
     int count() const noexcept;
@@ -43,7 +44,8 @@ private:
     UIMenu *m_menu;
     std::vector<ItemData> m_items;
     int m_itemHeight,
-        m_currentIndex;
+        m_currentIndex,
+        m_maxVisibleItems;
     bool m_skipNextClick,
          m_mousePressed;
 };

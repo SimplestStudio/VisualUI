@@ -1,5 +1,7 @@
 #include "uicombobox.h"
+#include "uiboxlayout.h"
 #include "uibutton.h"
+#include "uilistview.h"
 #include "uimenu.h"
 #include "uimetrics.h"
 #include "uiscalaranimation.h"
@@ -16,6 +18,7 @@ UIComboBox::UIComboBox(UIWidget *parent) :
     m_menu(nullptr),
     m_itemHeight(DEFAULT_ITEM_HEIGHT),
     m_currentIndex(-1),
+    m_maxVisibleItems(0),
     m_skipNextClick(false),
     m_mousePressed(false)
 {
@@ -132,21 +135,54 @@ void UIComboBox::onClick()
 
 void UIComboBox::populateMenu()
 {
-    for (size_t i = 0; i < m_items.size(); ++i) {
-        const tstring &itemText = m_items[i].text;
-        UIButton *button = m_menu->addSection(itemText);
-        button->setBaseSize(50, m_itemHeight);
-        button->clickSignal.connect([this, button, i]() {
-            setText(button->text());
+    if (m_maxVisibleItems > 0) {
+        int visibleCount = m_items.size();
+        if (visibleCount > m_maxVisibleItems) {
+            visibleCount = m_maxVisibleItems;
+        }
+        int listHeight = visibleCount * m_itemHeight * m_dpi_ratio;
+
+        UIListView *listView = new UIListView(m_menu);
+        listView->setObjectGroupId(_T("ListViewViewport"));
+        listView->setRowBaseHeight(m_itemHeight);
+        listView->setActivateOnMouseUp(true);
+        ((UIBoxLayout*)m_menu->layout())->addWidget(listView);
+
+        for (size_t i = 0; i < m_items.size(); ++i) {
+            listView->addItem(m_items[i].text);
+        }
+        if (m_currentIndex >= 0) {
+            listView->setCurrentIndex(m_currentIndex);
+        }
+        listView->indexChangedSignal.connect([this](int index) {
+            m_currentIndex = index;
+            setText(m_items[index].text);
             m_menu->close();
-            indexChangedSignal.emit(i);
+            indexChangedSignal.emit(index);
         });
+
+    } else {
+        for (size_t i = 0; i < m_items.size(); ++i) {
+            const tstring &itemText = m_items[i].text;
+            UIButton *button = m_menu->addSection(itemText);
+            button->setBaseSize(50, m_itemHeight);
+            button->clickSignal.connect([this, button, i]() {
+                m_currentIndex = i;
+                setText(button->text());
+                m_menu->close();
+                indexChangedSignal.emit(i);
+            });
+        }
     }
 }
 
 int UIComboBox::calculateMenuHeight() const
 {
-    int itemsHeight = m_items.size() * m_itemHeight * m_dpi_ratio;
+    int visibleCount = m_items.size();
+    if (m_maxVisibleItems > 0 && visibleCount > m_maxVisibleItems) {
+        visibleCount = m_maxVisibleItems;
+    }
+    int itemsHeight = visibleCount * m_itemHeight * m_dpi_ratio;
     int padding = 12 * m_dpi_ratio;
     return itemsHeight + padding;
 }
@@ -175,6 +211,11 @@ void UIComboBox::setCurrentIndex(int index, bool emitSignal) noexcept
 void UIComboBox::setItemHeight(int height) noexcept
 {
     m_itemHeight = height;
+}
+
+void UIComboBox::setMaxVisibleItems(int maxItems) noexcept
+{
+    m_maxVisibleItems = maxItems;
 }
 
 uintptr_t UIComboBox::itemData(int index)
