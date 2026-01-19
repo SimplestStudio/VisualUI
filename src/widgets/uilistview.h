@@ -44,6 +44,8 @@ private:
     void updateItemWidget(UIAbstractButton* button, int dataIndex);
     int getFirstVisibleIndex() noexcept;
     int getLastVisibleIndex() noexcept;
+    void onKeyUp();
+    void onKeyDown();
     
     struct Item {
         tstring text;
@@ -59,6 +61,7 @@ private:
     int m_itemCount;
     bool m_activateOnMouseUp;
     ScrollMode m_scrollMode;
+    bool m_keyAlignActive;
 };
 
 #endif // UILISTVIEW_H

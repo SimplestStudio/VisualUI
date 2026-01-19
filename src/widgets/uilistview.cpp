@@ -4,6 +4,34 @@
 #include "uiscrollbar.h"
 #include <algorithm>
 
+class UIListViewViewport : public UIWidget
+{
+public:
+    explicit UIListViewViewport(UIWidget *parent) :
+        UIWidget(parent)
+    {}
+    ~UIListViewViewport()
+    {}
+
+protected:
+#ifdef _WIN32
+    virtual bool event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result) override
+    {
+        switch (msg) {
+        case WM_CHILD_KEYDOWN_THROUGH_NOTIFY: {
+            HWND parentHwnd = GetParent(m_hWindow);
+            if (parentHwnd)
+                SendMessageW(parentHwnd, WM_CHILD_KEYDOWN_THROUGH_NOTIFY, wParam, lParam);
+            break;
+        }
+        default:
+            break;
+        }
+        return UIWidget::event(msg, wParam, lParam, result);
+    }
+#endif
+};
+
 UIListView::UIListView(UIWidget *parent) :
     UIAbstractScrollArea(parent),
     m_firstVisibleIndex(0),
@@ -12,9 +40,10 @@ UIListView::UIListView(UIWidget *parent) :
     m_currentIndex(-1),
     m_itemCount(0),
     m_activateOnMouseUp(false),
-    m_scrollMode(ScrollPerItem)
+    m_scrollMode(ScrollPerItem),
+    m_keyAlignActive(false)
 {
-    UIWidget *content = new UIWidget(this);
+    UIListViewViewport *content = new UIListViewViewport(this);
     content->setObjectGroupId(_T("ListViewViewport"));
     setContentWidget(content);
     setWheelScrollStep(m_rowBaseHeight);
@@ -234,6 +263,26 @@ bool UIListView::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
         }
         break;
     }
+
+    case WM_CHILD_KEYDOWN_THROUGH_NOTIFY:
+    case WM_KEYDOWN: {
+        if (m_disabled)
+            break;
+        switch (wParam) {
+        case VK_UP: {
+            onKeyUp();
+            break;
+        }
+        case VK_DOWN: {
+            onKeyDown();
+            break;
+        }
+        default:
+            break;
+        }
+        break;
+    }
+
     default:
         break;
     }
@@ -243,6 +292,24 @@ bool UIListView::event(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 bool UIListView::event(uint ev_type, void *param)
 {
     switch (ev_type) {
+    case GDK_KEY_PRESS: {
+        if (m_disabled)
+            break;
+        GdkEventKey *kev = (GdkEventKey*)param;
+        switch (kev->keyval) {
+        case GDK_KEY_Up: {
+            onKeyUp();
+            return true;
+        }
+        case GDK_KEY_Down: {
+            onKeyDown();
+            return true;
+        }
+        default:
+            break;
+        }
+    }
+
     default:
         break;
     }
@@ -317,8 +384,8 @@ void UIListView::createVisibleWidgets()
     if (m_scrollMode == ScrollPerPixel) {
         shift = currentScrollOffset - (m_firstVisibleIndex * rowHeight);
     } else {
-        // Only move if we are within one line of the start or end of the scroll
-        int totalHeight = m_itemCount * rowHeight;
+        // Only move if we are within one line of the start or end of the scroll,
+        // or if the scroll offset is not aligned to the row grid (e.g., VK_DOWN bottom-align).
         int maxOffset = maxScrollOffsetY();
         
         bool isTop = (currentScrollOffset < rowHeight);
@@ -326,8 +393,9 @@ void UIListView::createVisibleWidgets()
         // Calculate the last point where we can snap to the grid
         int lastSnapPoint = (maxOffset / rowHeight) * rowHeight;
         bool isBottom = (currentScrollOffset >= lastSnapPoint && maxOffset > 0);
-        
-        if (isTop || isBottom) {
+        bool isMisaligned = m_keyAlignActive && (rowHeight > 0) && (currentScrollOffset % rowHeight != 0);
+
+        if (isTop || isBottom || isMisaligned) {
             shift = currentScrollOffset - (m_firstVisibleIndex * rowHeight);
         }
     }
@@ -363,6 +431,9 @@ void UIListView::createVisibleWidgets()
             }
         }
     }
+
+    // Consume key-align flag after the layout pass
+    m_keyAlignActive = false;
 }
 
 void UIListView::updateVisibleItems()
@@ -415,4 +486,118 @@ int UIListView::getLastVisibleIndex() noexcept
     // Add a buffer for smoothness
     lastIndex = std::min<int>(m_itemCount - 1, lastIndex + 1);
     return std::max<int>(0, lastIndex);
+}
+
+void UIListView::onKeyUp()
+{
+    if (m_itemCount > 0) {
+        int newIndex = m_currentIndex;
+        if (m_currentIndex == -1) {
+            // No selection, select last item
+            newIndex = m_itemCount - 1;
+        } else
+        if (m_currentIndex > 0) {
+            // Move selection up
+            newIndex = m_currentIndex - 1;
+        }
+
+        if (newIndex != m_currentIndex) {
+            setCurrentIndex(newIndex);
+
+            // Ensure the selected item is fully visible
+            int rowHeight = m_rowBaseHeight * m_dpi_ratio;
+            int itemTop = newIndex * rowHeight;
+            int currentScrollPos = -m_scrollOffsetY;
+
+            // Check if item is above the viewport or partially visible at top
+            if (itemTop < currentScrollPos) {
+                // Scroll to show the item at the top
+                m_scrollOffsetY = -itemTop;
+
+                if (m_verticalScrollBar)
+                    m_verticalScrollBar->setValue(-m_scrollOffsetY);
+
+                onScrollOffsetChanged();
+                scrollPositionChanged.emit(m_scrollOffsetY);
+#ifdef __linux__
+                updateGeometry();
+#endif
+            }
+        }
+    }
+}
+
+void UIListView::onKeyDown()
+{
+    if (m_itemCount > 0) {
+        int newIndex = m_currentIndex;
+        if (m_currentIndex == -1) {
+            // No selection, select first item
+            newIndex = 0;
+        } else
+        if (m_currentIndex < m_itemCount - 1) {
+            // Move selection down
+            newIndex = m_currentIndex + 1;
+        }
+
+        if (newIndex != m_currentIndex) {
+            setCurrentIndex(newIndex);
+
+            // Ensure the selected item is fully visible
+            if (UIWidget *view = contentWidget()) {
+                int rowHeight = m_rowBaseHeight * m_dpi_ratio;
+                Size viewportSize = view->size();
+
+                // Calculate item bounds in content coordinates
+                int itemTop = newIndex * rowHeight;
+                int itemBottom = itemTop + rowHeight;
+
+                int maxOffset = maxScrollOffsetY();
+
+                int currentScrollPos = -m_scrollOffsetY;
+                int viewportBottom = currentScrollPos + viewportSize.height;
+
+                // Skip if the item is already fully visible
+                if (itemTop >= currentScrollPos && itemBottom <= viewportBottom) {
+                    return;
+                }
+
+                // Calculate the scroll offset needed to make item fully visible
+                int targetScrollPos;
+                if (itemBottom > viewportBottom) {
+#ifdef SIMPLE_SCROLL
+                    // Item is below viewport, scroll to make it visible
+                    // Simple approach: scroll to show item at top of viewport
+                    targetScrollPos = itemTop;
+#else
+                    // Item is below viewport, scroll to make it visible at the bottom
+                    targetScrollPos = itemBottom - viewportSize.height;
+#endif
+                } else {
+                    // Item is above viewport, scroll to show it at top
+                    targetScrollPos = itemTop;
+                }
+
+                // Clamp to valid range [0, maxOffset]
+                if (targetScrollPos > maxOffset) {
+                    targetScrollPos = maxOffset;
+                }
+
+                // Only scroll if target position differs from current
+                if (targetScrollPos != currentScrollPos) {
+                    m_scrollOffsetY = -targetScrollPos;
+                    m_keyAlignActive = true;
+
+                    if (m_verticalScrollBar)
+                        m_verticalScrollBar->setValue(targetScrollPos);
+
+                    onScrollOffsetChanged();
+                    scrollPositionChanged.emit(m_scrollOffsetY);
+#ifdef __linux__
+                    updateGeometry();
+#endif
+                }
+            }
+        }
+    }
 }
