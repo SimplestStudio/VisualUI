@@ -554,10 +554,12 @@ void UIAbstractEditControl::populateMenu()
     cutBtn->setDisabled(true);
 
     UIButton *copyBtn = m_menu->addSection(_T("Copy"));
+    copyBtn->setObjectGroupId(_T("MenuButton"));
     copyBtn->metrics()->setMetrics(Metrics::TextMarginLeft, 12);
     copyBtn->setDisabled(true);
 
     UIButton *pasteBtn = m_menu->addSection(_T("Paste"));
+    pasteBtn->setObjectGroupId(_T("MenuButton"));
     pasteBtn->metrics()->setMetrics(Metrics::TextMarginLeft, 12);
 
     tstring clipboardText = GetClipboardText(platformWindow());
