@@ -3,6 +3,9 @@
 
 #include "uiwindow.h"
 
+namespace Ui {
+    class MainWindow;
+}
 
 class MainWindow : public UIWindow
 {
@@ -11,6 +14,7 @@ public:
     ~MainWindow();
 
 private:
+    Ui::MainWindow *ui;
     bool m_toggleChecked;
 };
 

@@ -22,6 +22,7 @@ set(HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/resource.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mainwindow.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui_mainwindow.h
 )
 
 set(OTHER_FILES
